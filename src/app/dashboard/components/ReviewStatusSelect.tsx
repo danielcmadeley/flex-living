@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, X, Clock } from "lucide-react";
+import { Loader2, Check, X, Clock, CheckCircle2 } from "lucide-react";
 import { useUpdateReviewStatus } from "@/hooks/use-review-mutations";
 
 interface ReviewStatusSelectProps {
@@ -29,67 +29,42 @@ export function ReviewStatusSelect({
   onStatusChange,
   disabled = false,
 }: ReviewStatusSelectProps) {
-  const [selectedStatus, setSelectedStatus] = useState(currentStatus);
+  const [optimisticStatus, setOptimisticStatus] = useState(currentStatus);
+  const [showSuccess, setShowSuccess] = useState(false);
   const updateStatusMutation = useUpdateReviewStatus();
 
-  // Sync local state with prop changes
+  // Sync optimistic state with prop changes (only when not mutating)
   useEffect(() => {
-    console.log("[ReviewStatusSelect] Props changed, syncing state:", {
-      reviewId,
-      currentStatus,
-      selectedStatus,
-      timestamp: new Date().toISOString(),
-    });
-    setSelectedStatus(currentStatus);
-  }, [currentStatus, reviewId, selectedStatus]);
+    if (!updateStatusMutation.isPending) {
+      setOptimisticStatus(currentStatus);
+    }
+  }, [currentStatus, updateStatusMutation.isPending]);
 
   const handleStatusChange = async (
     newStatus: "published" | "pending" | "draft",
   ) => {
-    console.log("[ReviewStatusSelect] Status change initiated:", {
-      reviewId,
-      currentStatus,
-      newStatus,
-      isPending: updateStatusMutation.isPending,
-      environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-    });
-
     if (newStatus === currentStatus || updateStatusMutation.isPending) {
-      console.log("[ReviewStatusSelect] Status change aborted:", {
-        reason:
-          newStatus === currentStatus ? "same status" : "mutation pending",
-      });
       return;
     }
 
-    // Optimistically update the UI
-    setSelectedStatus(newStatus);
-    console.log("[ReviewStatusSelect] Optimistic update applied:", newStatus);
+    // Immediately update the optimistic state for instant UI feedback
+    setOptimisticStatus(newStatus);
 
     try {
-      console.log("[ReviewStatusSelect] Starting mutation...");
-      const result = await updateStatusMutation.mutateAsync({
+      await updateStatusMutation.mutateAsync({
         reviewId,
         status: newStatus,
       });
 
-      console.log(
-        "[ReviewStatusSelect] Mutation completed successfully:",
-        result,
-      );
+      // Show success feedback briefly
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
 
       // Call the callback if provided (for any additional handling)
       onStatusChange?.(reviewId, newStatus);
-      console.log("[ReviewStatusSelect] Callback triggered");
-    } catch (error) {
-      console.error("[ReviewStatusSelect] Mutation failed:", error);
+    } catch {
       // Revert optimistic update on error
-      setSelectedStatus(currentStatus);
-      console.log(
-        "[ReviewStatusSelect] Optimistic update reverted to:",
-        currentStatus,
-      );
+      setOptimisticStatus(currentStatus);
     }
   };
 
@@ -126,7 +101,7 @@ export function ReviewStatusSelect({
   return (
     <div className="flex items-center space-x-2">
       <Select
-        value={selectedStatus}
+        value={optimisticStatus}
         onValueChange={handleStatusChange}
         disabled={disabled || updateStatusMutation.isPending}
       >
@@ -135,10 +110,17 @@ export function ReviewStatusSelect({
         >
           <SelectValue>
             <div className="flex items-center space-x-1">
-              {getStatusIcon(selectedStatus, updateStatusMutation.isPending)}
-              <span className="capitalize">{selectedStatus}</span>
+              {showSuccess ? (
+                <CheckCircle2 className="h-3 w-3 text-green-600" />
+              ) : (
+                getStatusIcon(optimisticStatus, updateStatusMutation.isPending)
+              )}
+              <span className="capitalize">{optimisticStatus}</span>
               {updateStatusMutation.isPending && (
                 <span className="text-xs text-gray-500">(saving...)</span>
+              )}
+              {showSuccess && (
+                <span className="text-xs text-green-600">✓ Saved</span>
               )}
             </div>
           </SelectValue>
@@ -167,11 +149,12 @@ export function ReviewStatusSelect({
 
       {/* Status badge for quick visual reference */}
       <Badge
-        className={`${getStatusColor(selectedStatus)} text-xs font-medium ${updateStatusMutation.isPending ? "animate-pulse" : ""}`}
+        className={`${getStatusColor(optimisticStatus)} text-xs font-medium ${updateStatusMutation.isPending ? "animate-pulse" : ""} ${showSuccess ? "border-green-500 bg-green-50" : ""}`}
         variant="outline"
       >
-        {selectedStatus}
+        {optimisticStatus}
         {updateStatusMutation.isPending && " ..."}
+        {showSuccess && " ✓"}
       </Badge>
     </div>
   );
