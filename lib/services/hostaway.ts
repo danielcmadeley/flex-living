@@ -1,4 +1,7 @@
 import { HostawayReviewsResponse } from "../types/hostaway";
+import { db, hostawayTokens } from "../../db";
+import { desc } from "drizzle-orm";
+import { mockHostawayResponse } from "../../src/data/mockReviews";
 
 interface TokenStorage {
   token: string;
@@ -32,14 +35,37 @@ class HostawayService {
     return HostawayService.instance;
   }
 
-  private isTokenValid(): boolean {
-    if (!this.tokenStorage) return false;
-    return Date.now() < this.tokenStorage.expiresAt;
+  private async isTokenValid(): Promise<boolean> {
+    // Check in-memory storage first
+    if (this.tokenStorage && Date.now() < this.tokenStorage.expiresAt) {
+      return true;
+    }
+
+    // Check database for valid token
+    const dbTokens = await db
+      .select()
+      .from(hostawayTokens)
+      .orderBy(desc(hostawayTokens.createdAt))
+      .limit(1);
+
+    if (dbTokens.length > 0) {
+      const dbToken = dbTokens[0];
+      if (dbToken.expiresAt.getTime() > Date.now()) {
+        // Update in-memory storage
+        this.tokenStorage = {
+          token: dbToken.accessToken,
+          expiresAt: dbToken.expiresAt.getTime(),
+        };
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private async getAccessToken(): Promise<string> {
     // Check if we have a valid token
-    if (this.isTokenValid()) {
+    if (await this.isTokenValid()) {
       return this.tokenStorage!.token;
     }
 
@@ -70,10 +96,21 @@ class HostawayService {
       const tokenData = await response.json();
 
       // Store token with expiration time (subtract 5 minutes for safety)
+      const expiresAt = new Date(
+        Date.now() + tokenData.expires_in * 1000 - 5 * 60 * 1000,
+      );
+
       this.tokenStorage = {
         token: tokenData.access_token,
-        expiresAt: Date.now() + tokenData.expires_in * 1000 - 5 * 60 * 1000,
+        expiresAt: expiresAt.getTime(),
       };
+
+      // Store in database
+      await db.insert(hostawayTokens).values({
+        accessToken: tokenData.access_token,
+        tokenType: tokenData.token_type,
+        expiresAt: expiresAt,
+      });
 
       return tokenData.access_token;
     } catch (error) {
@@ -153,90 +190,7 @@ class HostawayService {
   }
 
   private getMockReviews(): HostawayReviewsResponse {
-    return {
-      status: "success",
-      result: [
-        {
-          id: 7453,
-          type: "host-to-guest",
-          status: "published",
-          rating: null,
-          publicReview:
-            "Shane and family are wonderful! Would definitely host again :)",
-          reviewCategory: [
-            {
-              category: "cleanliness",
-              rating: 10,
-            },
-            {
-              category: "communication",
-              rating: 10,
-            },
-            {
-              category: "respect_house_rules",
-              rating: 10,
-            },
-          ],
-          submittedAt: "2020-08-21 22:45:14",
-          guestName: "Shane Finkelstein",
-          listingName: "2B N1 A - 29 Shoreditch Heights",
-        },
-        {
-          id: 7454,
-          type: "guest-to-host",
-          status: "published",
-          rating: 9,
-          publicReview:
-            "Great location and very clean apartment. Host was responsive and helpful.",
-          reviewCategory: [
-            {
-              category: "cleanliness",
-              rating: 9,
-            },
-            {
-              category: "communication",
-              rating: 10,
-            },
-            {
-              category: "location",
-              rating: 10,
-            },
-            {
-              category: "value",
-              rating: 8,
-            },
-          ],
-          submittedAt: "2020-08-20 15:30:00",
-          guestName: "Maria Rodriguez",
-          listingName: "2B N1 A - 29 Shoreditch Heights",
-        },
-        {
-          id: 7455,
-          type: "host-to-guest",
-          status: "published",
-          rating: null,
-          publicReview:
-            "Excellent guests! Left the place spotless and were very respectful.",
-          reviewCategory: [
-            {
-              category: "cleanliness",
-              rating: 10,
-            },
-            {
-              category: "communication",
-              rating: 9,
-            },
-            {
-              category: "respect_house_rules",
-              rating: 10,
-            },
-          ],
-          submittedAt: "2020-08-19 09:15:22",
-          guestName: "John Smith",
-          listingName: "1B Central London - Modern Flat",
-        },
-      ],
-    };
+    return mockHostawayResponse;
   }
 }
 
