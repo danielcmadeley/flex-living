@@ -6,29 +6,38 @@ import {
   groupReviewsByType,
   calculateAverageRatings,
 } from "@/lib/utils/reviewNormalizer";
-import { ReviewsApiResponse, NormalizedReview } from "@/lib/types/hostaway";
+import { NormalizedReview } from "@/lib/types/hostaway";
+import { reviewQuerySchema, reviewsApiResponseSchema } from "@/lib/schemas";
+import {
+  validateQueryParams,
+  createValidationErrorResponse,
+} from "@/lib/utils/validation";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    // Validate query parameters
+    const validation = validateQueryParams(reviewQuerySchema, request);
 
-    // Extract query parameters
-    const type = searchParams.get("type");
-    const status = searchParams.get("status");
-    const limit = searchParams.get("limit");
-    const groupBy = searchParams.get("groupBy"); // 'listing', 'type', or null
+    if (!validation.success) {
+      return createValidationErrorResponse(validation.error);
+    }
 
-    // Note: These params are ready for real Hostaway API integration
-    const sortOrder =
-      (searchParams.get("sortOrder") as "asc" | "desc") || "desc";
-    const includeStats = searchParams.get("includeStats") === "true";
+    const {
+      type,
+      status,
+      listingName,
+      limit,
+      sortOrder,
+      includeStats,
+      groupBy,
+    } = validation.data;
 
     // Fetch reviews from database
     const dbReviews = await ReviewsQueries.getAll({
       type: type || undefined,
       status: status || undefined,
-      listingName: searchParams.get("listingName") || undefined,
-      limit: limit ? parseInt(limit) : undefined,
+      listingName: listingName || undefined,
+      limit: limit || undefined,
     });
 
     // Convert database reviews to normalized format
@@ -84,14 +93,30 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const response: ReviewsApiResponse & Record<string, unknown> = {
-      status: "success",
+    const response = {
+      status: "success" as const,
       data: responseData as NormalizedReview[],
       total: normalizedReviews.length,
       ...additionalInfo,
     };
 
-    return NextResponse.json(response, {
+    // Validate response before sending
+    const responseValidation = reviewsApiResponseSchema.safeParse(response);
+
+    if (!responseValidation.success) {
+      console.error("Response validation failed:", responseValidation.error);
+      return NextResponse.json(
+        {
+          status: "error",
+          data: [],
+          total: 0,
+          message: "Response validation failed",
+        },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(responseValidation.data, {
       status: 200,
       headers: {
         "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
@@ -107,7 +132,7 @@ export async function GET(request: NextRequest) {
         total: 0,
         message:
           error instanceof Error ? error.message : "Internal server error",
-      } as ReviewsApiResponse,
+      },
       { status: 500 },
     );
   }

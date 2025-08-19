@@ -29,7 +29,7 @@ export default function ReviewsDemo() {
     setError(null);
 
     try {
-      const url = `/api/reviews/hostaway${includeStats ? "?includeStats=true" : ""}`;
+      const url = `/api/reviews/hostaway?status=published${includeStats ? "&includeStats=true" : ""}`;
       const response = await fetch(url);
       const data: ReviewsResponse = await response.json();
 
@@ -99,12 +99,19 @@ export default function ReviewsDemo() {
       <div className="mb-8">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Hostaway Reviews Demo
-            </h1>
-            <p className="text-gray-600">
-              This demo shows how to fetch and display reviews from the Hostaway
-              API
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Flex Living Reviews
+              </h1>
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                Public View
+              </span>
+            </div>
+            <p className="text-gray-600 mb-2">
+              Displaying published reviews from our verified properties
+            </p>
+            <p className="text-sm text-gray-500">
+              Quality accommodations across London's premium locations
             </p>
           </div>
           <a
@@ -122,15 +129,15 @@ export default function ReviewsDemo() {
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
         >
-          {loading ? "Loading..." : "Refresh Reviews"}
+          {loading ? "Loading..." : "Latest Reviews"}
         </button>
 
         <button
           onClick={() => fetchReviews(false)}
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
         >
-          Fetch Without Stats
+          Quick View
         </button>
       </div>
 
@@ -189,7 +196,9 @@ export default function ReviewsDemo() {
       )}
 
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold">Reviews ({reviews.length})</h2>
+        <h2 className="text-xl font-semibold">
+          Published Reviews ({reviews.length})
+        </h2>
 
         {reviews.map((review) => (
           <div
@@ -200,7 +209,7 @@ export default function ReviewsDemo() {
               <div>
                 <h3 className="font-semibold text-lg">{review.guestName}</h3>
                 <p className="text-gray-600">{review.listingName}</p>
-                <div className="flex items-center mt-1">
+                <div className="flex items-center mt-1 gap-2">
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${
                       review.type === "host-to-guest"
@@ -208,9 +217,14 @@ export default function ReviewsDemo() {
                         : "bg-green-100 text-green-800"
                     }`}
                   >
-                    {review.type}
+                    {review.type === "host-to-guest"
+                      ? "Host → Guest"
+                      : "Guest → Host"}
                   </span>
-                  <span className="ml-2 text-sm text-gray-500">
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                    Published
+                  </span>
+                  <span className="text-sm text-gray-500">
                     {formatDate(review.submittedAt)}
                   </span>
                 </div>
@@ -254,7 +268,18 @@ export default function ReviewsDemo() {
         ))}
 
         {reviews.length === 0 && !loading && (
-          <div className="text-center py-8 text-gray-500">No reviews found</div>
+          <div className="text-center py-12 text-gray-500">
+            <div className="mb-4 text-4xl">🏠</div>
+            <div className="text-lg font-medium mb-2">
+              No published reviews found
+            </div>
+            <div className="text-sm">
+              Reviews will appear here once they are published by our team
+            </div>
+            <div className="text-xs mt-2 text-gray-400">
+              Only verified reviews from actual guests are displayed
+            </div>
+          </div>
         )}
       </div>
     </div>

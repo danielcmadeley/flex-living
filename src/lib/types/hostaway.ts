@@ -1,3 +1,13 @@
+// Re-export types from Zod schemas for backward compatibility
+export type {
+  ReviewType,
+  ReviewStatus,
+  ReviewCategory,
+  NormalizedReview,
+  ReviewsApiResponse,
+} from "../schemas";
+
+// Legacy interfaces for Hostaway API (keeping for existing integrations)
 export interface HostawayTokenResponse {
   token_type: string;
   expires_in: number;
@@ -30,32 +40,4 @@ export interface HostawayReview {
 export interface HostawayReviewsResponse {
   status: string;
   result: HostawayReview[];
-}
-
-export interface NormalizedReview {
-  id: number;
-  type: 'host-to-guest' | 'guest-to-host';
-  status: 'published' | 'pending' | 'draft';
-  overallRating: number | null;
-  comment: string;
-  categories: {
-    cleanliness?: number;
-    communication?: number;
-    respect_house_rules?: number;
-    accuracy?: number;
-    location?: number;
-    check_in?: number;
-    value?: number;
-  };
-  submittedAt: Date;
-  guestName: string;
-  listingName: string;
-  channel?: string;
-}
-
-export interface ReviewsApiResponse {
-  status: 'success' | 'error';
-  data: NormalizedReview[];
-  total: number;
-  message?: string;
 }

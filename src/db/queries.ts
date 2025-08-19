@@ -198,6 +198,61 @@ export class ReviewsQueries {
     }
   }
 
+  // Force reseed - clears existing data and seeds fresh
+  static async forceReseed(): Promise<Review[]> {
+    try {
+      console.log("🗑️ Clearing existing reviews...");
+      await db.delete(reviews);
+
+      console.log("🌱 Seeding fresh mock data...");
+      const reviewsForDb = mockReviews.map((mockReview) => {
+        const { id: _id, ...review } = mockReview;
+        return review;
+      });
+
+      const result = await db.insert(reviews).values(reviewsForDb).returning();
+      console.log(`✅ Force seeded ${result.length} mock reviews`);
+      return result;
+    } catch (error) {
+      console.error("Error force reseeding:", error);
+      return [];
+    }
+  }
+
+  // Seed without checking for existing data
+  static async forceSeedMockData(): Promise<Review[]> {
+    try {
+      console.log("🌱 Force seeding mock data (ignoring existing data)...");
+
+      // Prepare mock data for database insertion (remove id field)
+      const reviewsForDb = mockReviews.map((mockReview) => {
+        const { id: _id, ...review } = mockReview;
+        return review;
+      });
+
+      // Insert mock data without checking for existing
+      const result = await db.insert(reviews).values(reviewsForDb).returning();
+      console.log(`✅ Force seeded ${result.length} mock reviews`);
+      return result;
+    } catch (error) {
+      console.error("Error force seeding mock data:", error);
+      return [];
+    }
+  }
+
+  // Clear all reviews
+  static async clearAllReviews(): Promise<boolean> {
+    try {
+      console.log("🗑️ Clearing all reviews...");
+      await db.delete(reviews);
+      console.log("✅ All reviews cleared");
+      return true;
+    } catch (error) {
+      console.error("Error clearing reviews:", error);
+      return false;
+    }
+  }
+
   // Count total reviews
   static async count(): Promise<number> {
     try {

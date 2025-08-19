@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { createClientBrowser } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { loginSchema, type LoginInput } from "@/lib/schemas";
+import { validateData } from "@/lib/utils/validation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState<LoginInput>({
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const router = useRouter();
   const supabase = createClientBrowser();
 
@@ -16,11 +21,21 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
+
+    // Validate form data
+    const validation = validateData(loginSchema, formData);
+
+    if (!validation.success) {
+      setError(validation.error);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
       });
 
       if (error) {
@@ -33,6 +48,15 @@ export default function LoginPage() {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof LoginInput, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -61,8 +85,8 @@ export default function LoginPage() {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
               />
             </div>
             <div>
@@ -77,8 +101,8 @@ export default function LoginPage() {
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
               />
             </div>
           </div>
