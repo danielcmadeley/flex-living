@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import type { User } from "@supabase/supabase-js";
 import { useReviews } from "@/hooks/use-reviews";
-import { toast } from "sonner";
 import { DashboardOverview } from "./DashboardOverview";
 import { DashboardFilters, FilterState } from "./DashboardFilters";
 import { ReviewsTable } from "./ReviewsTable";
@@ -11,6 +10,7 @@ import { PerformanceCharts } from "./PerformanceCharts";
 import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import { NotificationCenter } from "./NotificationCenter";
 import { DatabaseSeeder } from "./DatabaseSeeder";
+import { ReviewStatusDebug } from "./ReviewStatusDebug";
 import LogoutButton from "./LogoutButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -24,11 +24,10 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   });
 
   // Fetch reviews with current filters
-  const { reviews, statistics, isLoading, isError, error, refetch } =
-    useReviews({
-      ...filters,
-      includeStats: true,
-    });
+  const { reviews, statistics, isLoading, isError, error } = useReviews({
+    ...filters,
+    includeStats: true,
+  });
 
   // Get unique properties for filter dropdown
   const properties = useMemo(() => {
@@ -57,21 +56,13 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     // TODO: Implement API call to update review visibility
   };
 
-  const handleStatusChange = async (
+  const handleStatusChange = (
     reviewId: number,
     newStatus: "published" | "pending" | "draft",
   ) => {
-    try {
-      // The ReviewStatusSelect component handles the API call,
-      // so we refetch data to keep everything in sync
-      console.log(`Status changed for review ${reviewId} to ${newStatus}`);
-
-      // Refetch the reviews data to reflect the status change
-      await refetch();
-    } catch (error) {
-      console.error("Error handling status change:", error);
-      toast.error("Failed to update review status");
-    }
+    // The ReviewStatusSelect component handles the API call and cache invalidation
+    // This callback is just for any additional handling if needed
+    console.log(`Status changed for review ${reviewId} to ${newStatus}`);
   };
 
   if (isError) {
@@ -199,11 +190,19 @@ export default function DashboardContent({ user }: DashboardContentProps) {
 
             <TabsContent value="database" className="space-y-6">
               {/* Database Management */}
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Database Management
-                </h2>
-                <DatabaseSeeder />
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Database Management
+                  </h2>
+                  <DatabaseSeeder />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    API Debug Tools
+                  </h2>
+                  <ReviewStatusDebug />
+                </div>
               </div>
             </TabsContent>
           </Tabs>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, X, Clock } from "lucide-react";
-import { toast } from "sonner";
+import { useUpdateReviewStatus } from "@/hooks/use-review-mutations";
 
 interface ReviewStatusSelectProps {
   reviewId: number;
@@ -29,56 +29,33 @@ export function ReviewStatusSelect({
   onStatusChange,
   disabled = false,
 }: ReviewStatusSelectProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const updateStatusMutation = useUpdateReviewStatus();
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    setSelectedStatus(currentStatus);
+  }, [currentStatus]);
 
   const handleStatusChange = async (
     newStatus: "published" | "pending" | "draft",
   ) => {
-    if (newStatus === currentStatus || isUpdating) return;
+    if (newStatus === currentStatus || updateStatusMutation.isPending) return;
 
-    setIsUpdating(true);
+    // Optimistically update the UI
     setSelectedStatus(newStatus);
-    setHasUnsavedChanges(true);
 
     try {
-      const response = await fetch(`/api/reviews/${reviewId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
+      await updateStatusMutation.mutateAsync({
+        reviewId,
+        status: newStatus,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to update review status");
-      }
-
-      // Call the callback if provided
+      // Call the callback if provided (for any additional handling)
       onStatusChange?.(reviewId, newStatus);
-
-      setHasUnsavedChanges(false);
-      toast.success(`Review status updated to ${newStatus}`, {
-        description: `Review #${reviewId} is now ${newStatus}`,
-      });
-    } catch (error) {
-      console.error("Error updating review status:", error);
-      setSelectedStatus(currentStatus); // Revert to original status
-      setHasUnsavedChanges(false);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to update review status",
-        {
-          description:
-            "Please try again or contact support if the issue persists",
-        },
-      );
-    } finally {
-      setIsUpdating(false);
+    } catch {
+      // Revert optimistic update on error
+      setSelectedStatus(currentStatus);
     }
   };
 
@@ -117,16 +94,16 @@ export function ReviewStatusSelect({
       <Select
         value={selectedStatus}
         onValueChange={handleStatusChange}
-        disabled={disabled || isUpdating}
+        disabled={disabled || updateStatusMutation.isPending}
       >
         <SelectTrigger
-          className={`w-36 ${hasUnsavedChanges ? "border-yellow-300 bg-yellow-50" : ""} ${isUpdating ? "opacity-75" : ""}`}
+          className={`w-36 ${updateStatusMutation.isPending ? "opacity-75" : ""}`}
         >
           <SelectValue>
             <div className="flex items-center space-x-1">
-              {getStatusIcon(selectedStatus, isUpdating)}
+              {getStatusIcon(selectedStatus, updateStatusMutation.isPending)}
               <span className="capitalize">{selectedStatus}</span>
-              {isUpdating && (
+              {updateStatusMutation.isPending && (
                 <span className="text-xs text-gray-500">(saving...)</span>
               )}
             </div>
@@ -156,11 +133,11 @@ export function ReviewStatusSelect({
 
       {/* Status badge for quick visual reference */}
       <Badge
-        className={`${getStatusColor(selectedStatus)} text-xs font-medium ${isUpdating ? "animate-pulse" : ""}`}
+        className={`${getStatusColor(selectedStatus)} text-xs font-medium ${updateStatusMutation.isPending ? "animate-pulse" : ""}`}
         variant="outline"
       >
         {selectedStatus}
-        {hasUnsavedChanges && !isUpdating && " *"}
+        {updateStatusMutation.isPending && " ..."}
       </Badge>
     </div>
   );

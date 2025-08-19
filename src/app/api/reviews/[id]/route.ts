@@ -4,6 +4,16 @@ import { db } from "@/db";
 import { reviews } from "@/db/schema";
 import { z } from "zod";
 
+// Helper function for consistent error logging
+function logError(context: string, error: unknown, reviewId?: number) {
+  console.error(`[API Error - ${context}]`, {
+    reviewId,
+    error: error instanceof Error ? error.message : error,
+    stack: error instanceof Error ? error.stack : undefined,
+    timestamp: new Date().toISOString(),
+  });
+}
+
 // Schema for validating status updates
 const updateStatusSchema = z.object({
   status: z.enum(["published", "pending", "draft"]),
@@ -17,7 +27,12 @@ export async function PATCH(
     const { id } = await params;
     const reviewId = parseInt(id);
 
+    console.log(
+      `[PATCH /api/reviews/${id}] Starting status update for review ${reviewId}`,
+    );
+
     if (isNaN(reviewId)) {
+      logError("Invalid review ID", `Received ID: ${id}`, reviewId);
       return NextResponse.json(
         { success: false, message: "Invalid review ID" },
         { status: 400 },
@@ -25,19 +40,26 @@ export async function PATCH(
     }
 
     const body = await request.json();
+    console.log(`[PATCH /api/reviews/${reviewId}] Request body:`, body);
+
     const validation = updateStatusSchema.safeParse(body);
 
     if (!validation.success) {
+      logError("Validation failed", validation.error.issues, reviewId);
       return NextResponse.json(
         {
           success: false,
           message: "Invalid status. Must be 'published', 'pending', or 'draft'",
+          errors: validation.error.issues,
         },
         { status: 400 },
       );
     }
 
     const { status } = validation.data;
+    console.log(
+      `[PATCH /api/reviews/${reviewId}] Updating status to: ${status}`,
+    );
 
     // Check if review exists
     const existingReview = await db
@@ -47,11 +69,20 @@ export async function PATCH(
       .limit(1);
 
     if (existingReview.length === 0) {
+      logError(
+        "Review not found",
+        `Review ID ${reviewId} does not exist`,
+        reviewId,
+      );
       return NextResponse.json(
         { success: false, message: "Review not found" },
         { status: 404 },
       );
     }
+
+    console.log(
+      `[PATCH /api/reviews/${reviewId}] Current status: ${existingReview[0].status}, updating to: ${status}`,
+    );
 
     // Update the review status
     const updatedReview = await db
@@ -63,13 +94,21 @@ export async function PATCH(
       .where(eq(reviews.id, reviewId))
       .returning();
 
+    console.log(
+      `[PATCH /api/reviews/${reviewId}] Successfully updated. New status: ${updatedReview[0].status}`,
+    );
+
     return NextResponse.json({
       success: true,
       message: `Review status updated to ${status}`,
       data: updatedReview[0],
     });
   } catch (error) {
-    console.error("Error updating review status:", error);
+    logError(
+      "Database operation failed",
+      error,
+      parseInt(await params.then((p) => p.id)),
+    );
 
     return NextResponse.json(
       {
@@ -90,7 +129,10 @@ export async function GET(
     const { id } = await params;
     const reviewId = parseInt(id);
 
+    console.log(`[GET /api/reviews/${id}] Fetching review ${reviewId}`);
+
     if (isNaN(reviewId)) {
+      logError("Invalid review ID in GET", `Received ID: ${id}`, reviewId);
       return NextResponse.json(
         { success: false, message: "Invalid review ID" },
         { status: 400 },
@@ -104,18 +146,31 @@ export async function GET(
       .limit(1);
 
     if (review.length === 0) {
+      logError(
+        "Review not found in GET",
+        `Review ID ${reviewId} does not exist`,
+        reviewId,
+      );
       return NextResponse.json(
         { success: false, message: "Review not found" },
         { status: 404 },
       );
     }
 
+    console.log(
+      `[GET /api/reviews/${reviewId}] Successfully fetched review with status: ${review[0].status}`,
+    );
+
     return NextResponse.json({
       success: true,
       data: review[0],
     });
   } catch (error) {
-    console.error("Error fetching review:", error);
+    logError(
+      "Database fetch failed in GET",
+      error,
+      parseInt(await params.then((p) => p.id)),
+    );
 
     return NextResponse.json(
       {
