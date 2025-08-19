@@ -16,7 +16,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Trash2
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,19 +25,31 @@ interface DebugLog {
   type: "info" | "success" | "error" | "warning";
   component: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export function ProductionDebugger() {
   const [logs, setLogs] = useState<DebugLog[]>([]);
   const [isRunningTest, setIsRunningTest] = useState(false);
-  const [testResults, setTestResults] = useState<any>(null);
+  const [testResults, setTestResults] = useState<{
+    success: boolean;
+    database: string | undefined;
+    ui: string | undefined;
+    expected: string;
+    cacheInvalidated: boolean;
+    environment: Record<string, unknown>;
+  } | null>(null);
 
   const queryClient = useQueryClient();
   const { reviews, refetch, isLoading } = useReviews({});
   const updateMutation = useUpdateReviewStatus();
 
-  const addLog = (type: DebugLog["type"], component: string, message: string, data?: any) => {
+  const addLog = (
+    type: DebugLog["type"],
+    component: string,
+    message: string,
+    data?: unknown,
+  ) => {
     const log: DebugLog = {
       timestamp: new Date().toISOString(),
       type,
@@ -45,7 +57,7 @@ export function ProductionDebugger() {
       message,
       data,
     };
-    setLogs(prev => [log, ...prev.slice(0, 49)]); // Keep last 50 logs
+    setLogs((prev) => [log, ...prev.slice(0, 49)]); // Keep last 50 logs
   };
 
   const clearLogs = () => {
@@ -61,7 +73,9 @@ export function ProductionDebugger() {
       timestamp: new Date().toISOString(),
       reactQueryVersion: "5.x",
       cacheSize: queryClient.getQueryCache().getAll().length,
-      reviewQueries: queryClient.getQueryCache().findAll({ queryKey: ["reviews"] }).length,
+      reviewQueries: queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["reviews"] }).length,
     };
   };
 
@@ -76,14 +90,27 @@ export function ProductionDebugger() {
     const originalStatus = testReview.status;
     const newStatus = originalStatus === "published" ? "pending" : "published";
 
-    addLog("info", "Test", `Starting cache invalidation test on review ${testReview.id}`);
-    addLog("info", "Test", `Original status: ${originalStatus}, changing to: ${newStatus}`);
+    addLog(
+      "info",
+      "Test",
+      `Starting cache invalidation test on review ${testReview.id}`,
+    );
+    addLog(
+      "info",
+      "Test",
+      `Original status: ${originalStatus}, changing to: ${newStatus}`,
+    );
 
     try {
       // Step 1: Check initial cache state
-      const initialQueries = queryClient.getQueryCache().findAll({ queryKey: ["reviews"] });
-      addLog("info", "Cache", `Initial cache queries: ${initialQueries.length}`,
-        initialQueries.map(q => ({ key: q.queryKey, state: q.state }))
+      const initialQueries = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["reviews"] });
+      addLog(
+        "info",
+        "Cache",
+        `Initial cache queries: ${initialQueries.length}`,
+        initialQueries.map((q) => ({ key: q.queryKey, state: q.state })),
       );
 
       // Step 2: Update status
@@ -94,21 +121,28 @@ export function ProductionDebugger() {
       });
 
       // Step 3: Check cache state after mutation
-      const postMutationQueries = queryClient.getQueryCache().findAll({ queryKey: ["reviews"] });
+      const postMutationQueries = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["reviews"] });
       addLog("success", "Mutation", "Status update completed");
-      addLog("info", "Cache", `Post-mutation cache queries: ${postMutationQueries.length}`,
-        postMutationQueries.map(q => ({ key: q.queryKey, state: q.state }))
+      addLog(
+        "info",
+        "Cache",
+        `Post-mutation cache queries: ${postMutationQueries.length}`,
+        postMutationQueries.map((q) => ({ key: q.queryKey, state: q.state })),
       );
 
       // Step 4: Wait and check if UI updated
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Step 5: Force refetch to verify database state
       addLog("info", "Refetch", "Force refetching data...");
       const { data: freshData } = await refetch();
 
-      const updatedReview = freshData?.find((r: any) => r.id === testReview.id);
-      const uiReview = reviews.find(r => r.id === testReview.id);
+      const updatedReview = freshData?.data?.find(
+        (r: { id: number }) => r.id === testReview.id,
+      );
+      const uiReview = reviews.find((r) => r.id === testReview.id);
 
       addLog("info", "Verification", "Checking data consistency", {
         database: updatedReview?.status,
@@ -144,10 +178,12 @@ export function ProductionDebugger() {
         });
         addLog("success", "Test", "Test reverted successfully");
       }, 2000);
-
     } catch (error) {
       addLog("error", "Test", "Test failed with error", error);
-      toast.error("Test failed: " + (error instanceof Error ? error.message : "Unknown error"));
+      toast.error(
+        "Test failed: " +
+          (error instanceof Error ? error.message : "Unknown error"),
+      );
     } finally {
       setIsRunningTest(false);
     }
@@ -182,7 +218,10 @@ export function ProductionDebugger() {
       if (response.ok) {
         addLog("success", "Network", "API connectivity test passed", data);
       } else {
-        addLog("error", "Network", "API connectivity test failed", { status: response.status, data });
+        addLog("error", "Network", "API connectivity test failed", {
+          status: response.status,
+          data,
+        });
       }
     } catch (error) {
       addLog("error", "Network", "Network test failed", error);
@@ -191,26 +230,38 @@ export function ProductionDebugger() {
 
   const getLogIcon = (type: DebugLog["type"]) => {
     switch (type) {
-      case "info": return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case "success": return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "error": return <XCircle className="h-4 w-4 text-red-500" />;
-      case "warning": return <Clock className="h-4 w-4 text-yellow-500" />;
-      default: return null;
+      case "info":
+        return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      case "success":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "error":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case "warning":
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      default:
+        return null;
     }
   };
 
   const getLogColor = (type: DebugLog["type"]) => {
     switch (type) {
-      case "info": return "border-l-blue-500 bg-blue-50";
-      case "success": return "border-l-green-500 bg-green-50";
-      case "error": return "border-l-red-500 bg-red-50";
-      case "warning": return "border-l-yellow-500 bg-yellow-50";
-      default: return "border-l-gray-500 bg-gray-50";
+      case "info":
+        return "border-l-blue-500 bg-blue-50";
+      case "success":
+        return "border-l-green-500 bg-green-50";
+      case "error":
+        return "border-l-red-500 bg-red-50";
+      case "warning":
+        return "border-l-yellow-500 bg-yellow-50";
+      default:
+        return "border-l-gray-500 bg-gray-50";
     }
   };
 
   useEffect(() => {
-    addLog("info", "Debugger", "Production debugger initialized", getEnvironmentInfo());
+    const envInfo = getEnvironmentInfo();
+    addLog("info", "Debugger", "Production debugger initialized", envInfo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -221,7 +272,9 @@ export function ProductionDebugger() {
             <Monitor className="h-5 w-5" />
             Production Cache Debugger
             <Badge variant="outline">
-              {process.env.NODE_ENV === "production" ? "PRODUCTION" : "DEVELOPMENT"}
+              {process.env.NODE_ENV === "production"
+                ? "PRODUCTION"
+                : "DEVELOPMENT"}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -230,28 +283,64 @@ export function ProductionDebugger() {
           <div className="p-4 bg-gray-50 rounded-lg">
             <h4 className="font-semibold mb-2">Environment Information</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div><strong>Environment:</strong> {process.env.NODE_ENV}</div>
-              <div><strong>Cache Queries:</strong> {queryClient.getQueryCache().getAll().length}</div>
-              <div><strong>Review Queries:</strong> {queryClient.getQueryCache().findAll({ queryKey: ["reviews"] }).length}</div>
-              <div><strong>Reviews Loaded:</strong> {reviews.length}</div>
-              <div><strong>Loading:</strong> {isLoading ? "Yes" : "No"}</div>
-              <div><strong>Mutation Pending:</strong> {updateMutation.isPending ? "Yes" : "No"}</div>
+              <div>
+                <strong>Environment:</strong> {process.env.NODE_ENV}
+              </div>
+              <div>
+                <strong>Cache Queries:</strong>{" "}
+                {queryClient.getQueryCache().getAll().length}
+              </div>
+              <div>
+                <strong>Review Queries:</strong>{" "}
+                {
+                  queryClient.getQueryCache().findAll({ queryKey: ["reviews"] })
+                    .length
+                }
+              </div>
+              <div>
+                <strong>Reviews Loaded:</strong> {reviews.length}
+              </div>
+              <div>
+                <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
+              </div>
+              <div>
+                <strong>Mutation Pending:</strong>{" "}
+                {updateMutation.isPending ? "Yes" : "No"}
+              </div>
             </div>
           </div>
 
           {/* Test Results */}
           {testResults && (
-            <div className={`p-4 rounded-lg ${testResults.success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+            <div
+              className={`p-4 rounded-lg ${testResults.success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}
+            >
               <h4 className="font-semibold mb-2 flex items-center gap-2">
-                {testResults.success ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                {testResults.success ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-600" />
+                )}
                 Last Test Results
               </h4>
               <div className="text-sm space-y-1">
-                <div><strong>Status:</strong> {testResults.success ? "PASSED" : "FAILED"}</div>
-                <div><strong>Expected:</strong> {testResults.expected}</div>
-                <div><strong>Database:</strong> {testResults.database}</div>
-                <div><strong>UI:</strong> {testResults.ui}</div>
-                <div><strong>Cache Invalidated:</strong> {testResults.cacheInvalidated ? "Yes" : "No"}</div>
+                <div>
+                  <strong>Status:</strong>{" "}
+                  {testResults.success ? "PASSED" : "FAILED"}
+                </div>
+                <div>
+                  <strong>Expected:</strong> {testResults.expected}
+                </div>
+                <div>
+                  <strong>Database:</strong> {testResults.database || "N/A"}
+                </div>
+                <div>
+                  <strong>UI:</strong> {testResults.ui || "N/A"}
+                </div>
+                <div>
+                  <strong>Cache Invalidated:</strong>{" "}
+                  {testResults.cacheInvalidated ? "Yes" : "No"}
+                </div>
               </div>
             </div>
           )}
@@ -263,7 +352,11 @@ export function ProductionDebugger() {
               disabled={isRunningTest || isLoading || reviews.length === 0}
               variant="default"
             >
-              {isRunningTest ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Database className="h-4 w-4 mr-2" />}
+              {isRunningTest ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Database className="h-4 w-4 mr-2" />
+              )}
               Test Cache Invalidation
             </Button>
 
@@ -311,12 +404,14 @@ export function ProductionDebugger() {
                         <Badge variant="outline" className="text-xs">
                           {log.component}
                         </Badge>
-                        <span className="font-medium text-sm">{log.message}</span>
+                        <span className="font-medium text-sm">
+                          {log.message}
+                        </span>
                         <span className="text-xs text-gray-500">
                           {new Date(log.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
-                      {log.data && (
+                      {log.data != null && (
                         <details className="mt-2">
                           <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
                             View data
