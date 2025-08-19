@@ -15,8 +15,8 @@ function checkEnvironment() {
     "HOSTAWAY_BASE_URL",
   ];
 
-  const missingVars = [];
-  const validVars = [];
+  const missingVars: string[] = [];
+  const validVars: string[] = [];
 
   requiredVars.forEach((varName) => {
     const value = process.env[varName];
