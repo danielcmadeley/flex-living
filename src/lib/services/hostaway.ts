@@ -1,7 +1,7 @@
 import { HostawayReviewsResponse } from "../types/hostaway";
-import { db, hostawayTokens } from "../../db";
+import { db, hostawayTokens } from "@/db";
 import { desc } from "drizzle-orm";
-import { mockHostawayResponse } from "../../src/data/mockReviews";
+import { mockHostawayResponse } from "@/data/mockReviews";
 
 interface TokenStorage {
   token: string;

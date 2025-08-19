@@ -1,6 +1,6 @@
 import { db, reviews, type Review, type NewReview } from "./index";
 import { eq, desc, and, ilike, count, avg } from "drizzle-orm";
-import { mockReviews } from "../src/data/mockReviews";
+import { mockReviews } from "@/data/mockReviews";
 
 export class ReviewsQueries {
   // Get all reviews with optional filters
@@ -11,6 +11,7 @@ export class ReviewsQueries {
     limit?: number;
   }): Promise<Review[]> {
     try {
+      // Build query conditions
       const conditions = [];
 
       if (filters?.type) {
@@ -23,19 +24,24 @@ export class ReviewsQueries {
         conditions.push(ilike(reviews.listingName, `%${filters.listingName}%`));
       }
 
-      let query = db.select().from(reviews);
+      // Build base query
+      const baseQuery = db.select().from(reviews);
 
-      if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as any;
-      }
+      // Apply conditions if any
+      const queryWithConditions =
+        conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
-      query = query.orderBy(desc(reviews.submittedAt)) as any;
+      // Apply ordering
+      const queryWithOrder = queryWithConditions.orderBy(
+        desc(reviews.submittedAt),
+      );
 
-      if (filters?.limit) {
-        query = query.limit(filters.limit) as any;
-      }
+      // Apply limit if specified
+      const finalQuery = filters?.limit
+        ? queryWithOrder.limit(filters.limit)
+        : queryWithOrder;
 
-      return await query;
+      return await finalQuery;
     } catch (error) {
       console.error("Error fetching reviews:", error);
       return [];
@@ -177,7 +183,10 @@ export class ReviewsQueries {
       }
 
       // Prepare mock data for database insertion (remove id field)
-      const reviewsForDb = mockReviews.map(({ id, ...review }) => review);
+      const reviewsForDb = mockReviews.map((mockReview) => {
+        const { id: _id, ...review } = mockReview;
+        return review;
+      });
 
       // Insert mock data
       const result = await db.insert(reviews).values(reviewsForDb).returning();

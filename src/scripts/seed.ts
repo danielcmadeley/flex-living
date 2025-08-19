@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 import { config } from "dotenv";
-import { ReviewsQueries } from "../db/queries";
+import { ReviewsQueries } from "@/db/queries";
 
 // Load environment variables from .env
 config({ path: ".env" });
