@@ -31,16 +31,22 @@ import {
   Download,
 } from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
+import { ReviewStatusSelect } from "./ReviewStatusSelect";
 
 interface ReviewsTableProps {
   reviews: NormalizedReview[];
   onVisibilityToggle?: (reviewId: number, isVisible: boolean) => void;
+  onStatusChange?: (
+    reviewId: number,
+    newStatus: "published" | "pending" | "draft",
+  ) => void;
   isLoading?: boolean;
 }
 
 export function ReviewsTable({
   reviews,
   onVisibilityToggle,
+  onStatusChange,
   isLoading,
 }: ReviewsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -184,18 +190,15 @@ export function ReviewsTable({
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-          const status = row.getValue("status") as string;
-          const variant =
-            status === "published"
-              ? "default"
-              : status === "pending"
-                ? "secondary"
-                : "outline";
+          const review = row.original;
+          const status = review.status as "published" | "pending" | "draft";
 
           return (
-            <Badge variant={variant} className="capitalize">
-              {status}
-            </Badge>
+            <ReviewStatusSelect
+              reviewId={review.id}
+              currentStatus={status}
+              onStatusChange={onStatusChange}
+            />
           );
         },
       },
@@ -262,7 +265,7 @@ export function ReviewsTable({
         },
       },
     ],
-    [onVisibilityToggle],
+    [onVisibilityToggle, onStatusChange],
   );
 
   const table = useReactTable({

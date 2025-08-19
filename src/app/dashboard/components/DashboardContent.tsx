@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import type { User } from "@supabase/supabase-js";
 import { useReviews } from "@/hooks/use-reviews";
+import { toast } from "sonner";
 import { DashboardOverview } from "./DashboardOverview";
 import { DashboardFilters, FilterState } from "./DashboardFilters";
 import { ReviewsTable } from "./ReviewsTable";
@@ -23,10 +24,11 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   });
 
   // Fetch reviews with current filters
-  const { reviews, statistics, isLoading, isError, error } = useReviews({
-    ...filters,
-    includeStats: true,
-  });
+  const { reviews, statistics, isLoading, isError, error, refetch } =
+    useReviews({
+      ...filters,
+      includeStats: true,
+    });
 
   // Get unique properties for filter dropdown
   const properties = useMemo(() => {
@@ -53,6 +55,23 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     // In a real app, this would make an API call to update the review visibility
     console.log(`Toggle visibility for review ${reviewId} to ${isVisible}`);
     // TODO: Implement API call to update review visibility
+  };
+
+  const handleStatusChange = async (
+    reviewId: number,
+    newStatus: "published" | "pending" | "draft",
+  ) => {
+    try {
+      // The ReviewStatusSelect component handles the API call,
+      // so we refetch data to keep everything in sync
+      console.log(`Status changed for review ${reviewId} to ${newStatus}`);
+
+      // Refetch the reviews data to reflect the status change
+      await refetch();
+    } catch (error) {
+      console.error("Error handling status change:", error);
+      toast.error("Failed to update review status");
+    }
   };
 
   if (isError) {
@@ -172,6 +191,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                 <ReviewsTable
                   reviews={filteredReviews}
                   onVisibilityToggle={handleVisibilityToggle}
+                  onStatusChange={handleStatusChange}
                   isLoading={isLoading}
                 />
               </div>

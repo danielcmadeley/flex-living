@@ -267,6 +267,28 @@ export class ReviewsQueries {
     }
   }
 
+  // Update review status
+  static async updateStatus(
+    reviewId: number,
+    status: "published" | "pending" | "draft",
+  ): Promise<Review | null> {
+    try {
+      const updatedReview = await db
+        .update(reviews)
+        .set({
+          status,
+          updatedAt: new Date(),
+        })
+        .where(eq(reviews.id, reviewId))
+        .returning();
+
+      return updatedReview.length > 0 ? updatedReview[0] : null;
+    } catch (error) {
+      console.error("Error updating review status:", error);
+      throw error;
+    }
+  }
+
   // Get reviews by listing name
   static async getByListing(listingName: string): Promise<Review[]> {
     try {
