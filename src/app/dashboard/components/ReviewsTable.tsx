@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
 import { ReviewStatusSelect } from "./ReviewStatusSelect";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReviewsTableProps {
   reviews: NormalizedReview[];
@@ -50,6 +51,7 @@ export function ReviewsTable({
   isLoading,
 }: ReviewsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const queryClient = useQueryClient();
 
   const exportToCSV = () => {
     const headers = [
@@ -88,6 +90,15 @@ export function ReviewsTable({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const forceRefresh = () => {
+    console.log("[ReviewsTable] Force refresh triggered");
+    // Clear all review caches
+    queryClient.removeQueries({ queryKey: ["reviews"] });
+    // Force refetch
+    queryClient.refetchQueries({ queryKey: ["reviews"], type: "all" });
+    console.log("[ReviewsTable] Cache cleared and refetch initiated");
   };
 
   const columns: ColumnDef<NormalizedReview>[] = useMemo(
@@ -308,6 +319,14 @@ export function ReviewsTable({
         <CardTitle className="flex items-center justify-between">
           <span>Reviews ({reviews.length})</span>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={forceRefresh}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2 text-blue-600"
+            >
+              Force Refresh
+            </Button>
             <Button
               onClick={exportToCSV}
               variant="outline"

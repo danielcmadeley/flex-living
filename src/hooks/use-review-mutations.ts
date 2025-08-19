@@ -17,20 +17,43 @@ interface UpdateReviewStatusResponse {
 export function useUpdateReviewStatus() {
   const queryClient = useQueryClient();
 
+  console.log("[Mutation Hook] useUpdateReviewStatus initialized", {
+    environment: process.env.NODE_ENV,
+    queryClient: queryClient ? "available" : "missing",
+  });
+
   return useMutation({
     mutationFn: async ({
       reviewId,
       status,
     }: UpdateReviewStatusParams): Promise<UpdateReviewStatusResponse> => {
+      console.log("[Mutation] Starting API call:", {
+        reviewId,
+        status,
+        url: `/api/reviews/${reviewId}`,
+        timestamp: new Date().toISOString(),
+      });
+
       const response = await fetch(`/api/reviews/${reviewId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
         },
         body: JSON.stringify({ status }),
       });
 
+      console.log("[Mutation] API response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       const result = await response.json();
+
+      console.log("[Mutation] API response data:", result);
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to update review status");
@@ -39,11 +62,32 @@ export function useUpdateReviewStatus() {
       return result;
     },
     onSuccess: (data, variables) => {
-      // Invalidate and refetch all reviews queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      console.log("[Mutation Success] Starting cache invalidation...", {
+        reviewId: variables.reviewId,
+        newStatus: variables.status,
+        responseData: data,
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString(),
+      });
 
-      // Optionally, you can update the cache directly for immediate UI updates
-      queryClient.setQueriesData(
+      // Force invalidate all reviews queries
+      const invalidationResult = queryClient.invalidateQueries({
+        queryKey: ["reviews"],
+        refetchType: "all", // Force refetch even inactive queries
+      });
+
+      console.log(
+        "[Mutation Success] Cache invalidation result:",
+        invalidationResult,
+      );
+
+      // Also remove all cached data to force fresh fetch
+      queryClient.removeQueries({ queryKey: ["reviews"] });
+
+      console.log("[Mutation Success] Removed all review queries from cache");
+
+      // Update cache directly for immediate UI feedback
+      const updateResult = queryClient.setQueriesData(
         { queryKey: ["reviews"] },
         (
           oldData:
@@ -56,9 +100,18 @@ export function useUpdateReviewStatus() {
               }
             | undefined,
         ) => {
-          if (!oldData?.data) return oldData;
+          console.log("[Mutation Success] Updating cache data:", {
+            oldData: oldData ? "exists" : "null",
+            reviewId: variables.reviewId,
+            newStatus: variables.status,
+          });
 
-          return {
+          if (!oldData?.data) {
+            console.log("[Mutation Success] No old data to update");
+            return oldData;
+          }
+
+          const updatedData = {
             ...oldData,
             data: oldData.data.map((review) =>
               review.id === variables.reviewId
@@ -66,15 +119,38 @@ export function useUpdateReviewStatus() {
                 : review,
             ),
           };
+
+          console.log("[Mutation Success] Cache updated successfully");
+          return updatedData;
         },
       );
+
+      console.log("[Mutation Success] setQueriesData result:", updateResult);
+
+      // Force a refetch after a short delay to ensure fresh data
+      setTimeout(() => {
+        console.log("[Mutation Success] Forcing refetch after delay...");
+        queryClient.refetchQueries({
+          queryKey: ["reviews"],
+          type: "all",
+        });
+      }, 100);
 
       toast.success(`Review status updated to ${variables.status}`, {
         description: `Review #${variables.reviewId} is now ${variables.status}`,
       });
+
+      console.log("[Mutation Success] Mutation success handler completed");
     },
-    onError: (error: Error) => {
-      console.error("Error updating review status:", error);
+    onError: (error: Error, variables) => {
+      console.error("[Mutation Error] Status update failed:", {
+        error: error.message,
+        stack: error.stack,
+        reviewId: variables.reviewId,
+        attemptedStatus: variables.status,
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString(),
+      });
 
       toast.error(error.message || "Failed to update review status", {
         description:

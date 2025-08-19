@@ -98,11 +98,20 @@ export async function PATCH(
       `[PATCH /api/reviews/${reviewId}] Successfully updated. New status: ${updatedReview[0].status}`,
     );
 
-    return NextResponse.json({
-      success: true,
-      message: `Review status updated to ${status}`,
-      data: updatedReview[0],
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: `Review status updated to ${status}`,
+        data: updatedReview[0],
+      },
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    );
   } catch (error) {
     logError(
       "Database operation failed",
@@ -161,10 +170,19 @@ export async function GET(
       `[GET /api/reviews/${reviewId}] Successfully fetched review with status: ${review[0].status}`,
     );
 
-    return NextResponse.json({
-      success: true,
-      data: review[0],
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: review[0],
+      },
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    );
   } catch (error) {
     logError(
       "Database fetch failed in GET",

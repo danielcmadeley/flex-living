@@ -119,7 +119,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(responseValidation.data, {
       status: 200,
       headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (error) {

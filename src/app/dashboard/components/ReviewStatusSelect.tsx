@@ -34,28 +34,62 @@ export function ReviewStatusSelect({
 
   // Sync local state with prop changes
   useEffect(() => {
+    console.log("[ReviewStatusSelect] Props changed, syncing state:", {
+      reviewId,
+      currentStatus,
+      selectedStatus,
+      timestamp: new Date().toISOString(),
+    });
     setSelectedStatus(currentStatus);
-  }, [currentStatus]);
+  }, [currentStatus, reviewId, selectedStatus]);
 
   const handleStatusChange = async (
     newStatus: "published" | "pending" | "draft",
   ) => {
-    if (newStatus === currentStatus || updateStatusMutation.isPending) return;
+    console.log("[ReviewStatusSelect] Status change initiated:", {
+      reviewId,
+      currentStatus,
+      newStatus,
+      isPending: updateStatusMutation.isPending,
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (newStatus === currentStatus || updateStatusMutation.isPending) {
+      console.log("[ReviewStatusSelect] Status change aborted:", {
+        reason:
+          newStatus === currentStatus ? "same status" : "mutation pending",
+      });
+      return;
+    }
 
     // Optimistically update the UI
     setSelectedStatus(newStatus);
+    console.log("[ReviewStatusSelect] Optimistic update applied:", newStatus);
 
     try {
-      await updateStatusMutation.mutateAsync({
+      console.log("[ReviewStatusSelect] Starting mutation...");
+      const result = await updateStatusMutation.mutateAsync({
         reviewId,
         status: newStatus,
       });
 
+      console.log(
+        "[ReviewStatusSelect] Mutation completed successfully:",
+        result,
+      );
+
       // Call the callback if provided (for any additional handling)
       onStatusChange?.(reviewId, newStatus);
-    } catch {
+      console.log("[ReviewStatusSelect] Callback triggered");
+    } catch (error) {
+      console.error("[ReviewStatusSelect] Mutation failed:", error);
       // Revert optimistic update on error
       setSelectedStatus(currentStatus);
+      console.log(
+        "[ReviewStatusSelect] Optimistic update reverted to:",
+        currentStatus,
+      );
     }
   };
 

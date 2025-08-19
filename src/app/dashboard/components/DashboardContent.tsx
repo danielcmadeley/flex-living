@@ -11,6 +11,7 @@ import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import { NotificationCenter } from "./NotificationCenter";
 import { DatabaseSeeder } from "./DatabaseSeeder";
 import { ReviewStatusDebug } from "./ReviewStatusDebug";
+import { ProductionDebugger } from "./ProductionDebugger";
 import LogoutButton from "./LogoutButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -202,6 +203,12 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                     API Debug Tools
                   </h2>
                   <ReviewStatusDebug />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Production Cache Debugger
+                  </h2>
+                  <ProductionDebugger />
                 </div>
               </div>
             </TabsContent>
