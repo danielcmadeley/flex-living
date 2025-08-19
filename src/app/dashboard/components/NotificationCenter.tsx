@@ -217,7 +217,7 @@ export function NotificationCenter({
                 <div className="p-6 text-center text-muted-foreground">
                   <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No notifications</p>
-                  <p className="text-xs">You're all caught up!</p>
+                  <p className="text-xs">You&apos;re all caught up!</p>
                 </div>
               ) : (
                 <div className="divide-y">

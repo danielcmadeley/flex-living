@@ -184,7 +184,8 @@ export class ReviewsQueries {
 
       // Prepare mock data for database insertion (remove id field)
       const reviewsForDb = mockReviews.map((mockReview) => {
-        const { id: _id, ...review } = mockReview;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _, ...review } = mockReview;
         return review;
       });
 
@@ -206,7 +207,8 @@ export class ReviewsQueries {
 
       console.log("🌱 Seeding fresh mock data...");
       const reviewsForDb = mockReviews.map((mockReview) => {
-        const { id: _id, ...review } = mockReview;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _, ...review } = mockReview;
         return review;
       });
 
@@ -226,7 +228,8 @@ export class ReviewsQueries {
 
       // Prepare mock data for database insertion (remove id field)
       const reviewsForDb = mockReviews.map((mockReview) => {
-        const { id: _id, ...review } = mockReview;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: _, ...review } = mockReview;
         return review;
       });
 

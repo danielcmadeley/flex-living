@@ -111,7 +111,7 @@ export default function ReviewsDemo() {
               Displaying published reviews from our verified properties
             </p>
             <p className="text-sm text-gray-500">
-              Quality accommodations across London's premium locations
+              Quality accommodations across London&apos;s premium locations
             </p>
           </div>
           <a

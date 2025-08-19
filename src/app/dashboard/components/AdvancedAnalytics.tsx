@@ -16,19 +16,8 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  ScatterChart,
-  Scatter,
-  ZAxis,
 } from "recharts";
-import {
-  TrendingUp,
-  Clock,
-  Users,
-  Star,
-  ThumbsUp,
-  AlertCircle,
-  Target,
-} from "lucide-react";
+import { TrendingUp, Clock, Users, Star, ThumbsUp, Target } from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
 
 interface AdvancedAnalyticsProps {
@@ -44,8 +33,12 @@ export function AdvancedAnalytics({
     if (!reviews.length) return null;
 
     // Calculate advanced metrics
-    const hostToGuestReviews = reviews.filter(r => r.type === "host-to-guest");
-    const guestToHostReviews = reviews.filter(r => r.type === "guest-to-host");
+    const hostToGuestReviews = reviews.filter(
+      (r) => r.type === "host-to-guest",
+    );
+    const guestToHostReviews = reviews.filter(
+      (r) => r.type === "guest-to-host",
+    );
 
     // Response time analysis (simulated based on review patterns)
     const responseTimeData = calculateResponseTimes(reviews);
@@ -94,7 +87,9 @@ export function AdvancedAnalytics({
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <p className="text-muted-foreground">No data available for analysis</p>
+          <p className="text-muted-foreground">
+            No data available for analysis
+          </p>
         </CardContent>
       </Card>
     );
@@ -112,7 +107,9 @@ export function AdvancedAnalytics({
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.qualityMetrics.avgResponseTime}</div>
+            <div className="text-2xl font-bold">
+              {analytics.qualityMetrics.avgResponseTime}
+            </div>
             <p className="text-xs text-muted-foreground">
               -12% from last month
             </p>
@@ -127,7 +124,9 @@ export function AdvancedAnalytics({
             <ThumbsUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.qualityMetrics.satisfaction}%</div>
+            <div className="text-2xl font-bold">
+              {analytics.qualityMetrics.satisfaction}%
+            </div>
             <p className="text-xs text-muted-foreground">
               +5.2% from last month
             </p>
@@ -142,7 +141,9 @@ export function AdvancedAnalytics({
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.qualityMetrics.completionRate}%</div>
+            <div className="text-2xl font-bold">
+              {analytics.qualityMetrics.completionRate}%
+            </div>
             <p className="text-xs text-muted-foreground">
               +2.1% from last month
             </p>
@@ -151,13 +152,13 @@ export function AdvancedAnalytics({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Repeat Guests
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Repeat Guests</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.retentionData.repeatGuestRate}%</div>
+            <div className="text-2xl font-bold">
+              {analytics.retentionData.repeatGuestRate}%
+            </div>
             <p className="text-xs text-muted-foreground">
               +8.1% from last month
             </p>
@@ -182,7 +183,10 @@ export function AdvancedAnalytics({
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip
-                  formatter={(value: number) => [`${value} hours`, "Avg Response Time"]}
+                  formatter={(value: number) => [
+                    `${value} hours`,
+                    "Avg Response Time",
+                  ]}
                   labelFormatter={(label) => `Month: ${label}`}
                 />
                 <Area
@@ -239,7 +243,10 @@ export function AdvancedAnalytics({
                 <XAxis dataKey="month" />
                 <YAxis domain={[0, 100]} />
                 <Tooltip
-                  formatter={(value: number) => [`${value}%`, "Satisfaction Rate"]}
+                  formatter={(value: number) => [
+                    `${value}%`,
+                    "Satisfaction Rate",
+                  ]}
                 />
                 <Area
                   type="monotone"
@@ -272,28 +279,42 @@ export function AdvancedAnalytics({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">New Guests</span>
-                <Badge variant="outline">{analytics.retentionData.newGuests}</Badge>
+                <Badge variant="outline">
+                  {analytics.retentionData.newGuests}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Returning Guests</span>
-                <Badge variant="default">{analytics.retentionData.returningGuests}</Badge>
+                <Badge variant="default">
+                  {analytics.retentionData.returningGuests}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">VIP Guests (3+ stays)</span>
-                <Badge variant="secondary">{analytics.retentionData.vipGuests}</Badge>
+                <span className="text-sm font-medium">
+                  VIP Guests (3+ stays)
+                </span>
+                <Badge variant="secondary">
+                  {analytics.retentionData.vipGuests}
+                </Badge>
               </div>
             </div>
 
             <div className="pt-4 border-t">
-              <h4 className="text-sm font-medium mb-2">Guest Feedback Quality</h4>
+              <h4 className="text-sm font-medium mb-2">
+                Guest Feedback Quality
+              </h4>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Detailed Reviews</span>
-                  <span className="font-medium">{analytics.qualityMetrics.detailedReviews}%</span>
+                  <span className="font-medium">
+                    {analytics.qualityMetrics.detailedReviews}%
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span>Constructive Feedback</span>
-                  <span className="font-medium">{analytics.qualityMetrics.constructiveFeedback}%</span>
+                  <span className="font-medium">
+                    {analytics.qualityMetrics.constructiveFeedback}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -317,7 +338,10 @@ export function AdvancedAnalytics({
                 {analytics.hostToGuestCount}
               </div>
               <p className="text-sm text-muted-foreground">
-                {((analytics.hostToGuestCount / reviews.length) * 100).toFixed(1)}% of total reviews
+                {((analytics.hostToGuestCount / reviews.length) * 100).toFixed(
+                  1,
+                )}
+                % of total reviews
               </p>
             </div>
             <div className="space-y-2">
@@ -326,7 +350,10 @@ export function AdvancedAnalytics({
                 {analytics.guestToHostCount}
               </div>
               <p className="text-sm text-muted-foreground">
-                {((analytics.guestToHostCount / reviews.length) * 100).toFixed(1)}% of total reviews
+                {((analytics.guestToHostCount / reviews.length) * 100).toFixed(
+                  1,
+                )}
+                % of total reviews
               </p>
             </div>
           </div>
@@ -341,7 +368,7 @@ function calculateResponseTimes(reviews: NormalizedReview[]) {
   // Simulate response time data based on review dates
   const monthlyData = new Map<string, number[]>();
 
-  reviews.forEach(review => {
+  reviews.forEach((review) => {
     const date = new Date(review.submittedAt);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
@@ -351,8 +378,13 @@ function calculateResponseTimes(reviews: NormalizedReview[]) {
 
     // Simulate response time based on rating (higher rating = faster response)
     const baseTime = 24; // 24 hours base
-    const ratingFactor = review.overallRating ? (10 - review.overallRating) * 2 : 10;
-    const responseTime = Math.max(1, baseTime - ratingFactor + Math.random() * 8);
+    const ratingFactor = review.overallRating
+      ? (10 - review.overallRating) * 2
+      : 10;
+    const responseTime = Math.max(
+      1,
+      baseTime - ratingFactor + Math.random() * 8,
+    );
 
     monthlyData.get(monthKey)!.push(responseTime);
   });
@@ -363,15 +395,17 @@ function calculateResponseTimes(reviews: NormalizedReview[]) {
         month: "short",
         year: "numeric",
       }),
-      responseTime: Number((times.reduce((sum, time) => sum + time, 0) / times.length).toFixed(1)),
+      responseTime: Number(
+        (times.reduce((sum, time) => sum + time, 0) / times.length).toFixed(1),
+      ),
     }))
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 function calculateSatisfactionTrends(reviews: NormalizedReview[]) {
-  const monthlyData = new Map<string, { guest: number[], host: number[] }>();
+  const monthlyData = new Map<string, { guest: number[]; host: number[] }>();
 
-  reviews.forEach(review => {
+  reviews.forEach((review) => {
     if (!review.overallRating) return;
 
     const date = new Date(review.submittedAt);
@@ -396,30 +430,51 @@ function calculateSatisfactionTrends(reviews: NormalizedReview[]) {
         month: "short",
         year: "numeric",
       }),
-      satisfaction: data.guest.length > 0
-        ? Number((data.guest.reduce((sum, s) => sum + s, 0) / data.guest.length).toFixed(1))
-        : 0,
-      hostSatisfaction: data.host.length > 0
-        ? Number((data.host.reduce((sum, s) => sum + s, 0) / data.host.length).toFixed(1))
-        : 0,
+      satisfaction:
+        data.guest.length > 0
+          ? Number(
+              (
+                data.guest.reduce((sum, s) => sum + s, 0) / data.guest.length
+              ).toFixed(1),
+            )
+          : 0,
+      hostSatisfaction:
+        data.host.length > 0
+          ? Number(
+              (
+                data.host.reduce((sum, s) => sum + s, 0) / data.host.length
+              ).toFixed(1),
+            )
+          : 0,
     }))
     .sort((a, b) => a.month.localeCompare(b.month));
 }
 
 function calculatePropertyRadarData(reviews: NormalizedReview[]) {
-  const categories = ["cleanliness", "communication", "location", "accuracy", "check_in", "value"];
+  const categories = [
+    "cleanliness",
+    "communication",
+    "location",
+    "accuracy",
+    "check_in",
+    "value",
+  ];
 
-  return categories.map(category => {
+  return categories.map((category) => {
     const categoryRatings = reviews
-      .map(review => review.categories[category])
-      .filter(rating => rating !== undefined) as number[];
+      .map((review) => review.categories[category])
+      .filter((rating) => rating !== undefined) as number[];
 
-    const avgRating = categoryRatings.length > 0
-      ? categoryRatings.reduce((sum, rating) => sum + rating, 0) / categoryRatings.length
-      : 0;
+    const avgRating =
+      categoryRatings.length > 0
+        ? categoryRatings.reduce((sum, rating) => sum + rating, 0) /
+          categoryRatings.length
+        : 0;
 
     return {
-      category: category.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+      category: category
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
       value: Number(avgRating.toFixed(1)),
     };
   });
@@ -427,12 +482,16 @@ function calculatePropertyRadarData(reviews: NormalizedReview[]) {
 
 function calculateQualityMetrics(reviews: NormalizedReview[]) {
   const totalReviews = reviews.length;
-  const reviewsWithRating = reviews.filter(r => r.overallRating !== null);
-  const highRatingReviews = reviewsWithRating.filter(r => r.overallRating! >= 8);
+  const reviewsWithRating = reviews.filter((r) => r.overallRating !== null);
+  const highRatingReviews = reviewsWithRating.filter(
+    (r) => r.overallRating! >= 8,
+  );
 
   return {
     avgResponseTime: "4.2h",
-    satisfaction: Math.round((highRatingReviews.length / reviewsWithRating.length) * 100),
+    satisfaction: Math.round(
+      (highRatingReviews.length / reviewsWithRating.length) * 100,
+    ),
     completionRate: Math.round((reviewsWithRating.length / totalReviews) * 100),
     detailedReviews: Math.round(Math.random() * 20 + 75), // Simulate
     constructiveFeedback: Math.round(Math.random() * 15 + 80), // Simulate
@@ -442,19 +501,27 @@ function calculateQualityMetrics(reviews: NormalizedReview[]) {
 function calculateRetentionMetrics(reviews: NormalizedReview[]) {
   const guestCounts = new Map<string, number>();
 
-  reviews.forEach(review => {
+  reviews.forEach((review) => {
     const count = guestCounts.get(review.guestName) || 0;
     guestCounts.set(review.guestName, count + 1);
   });
 
-  const newGuests = Array.from(guestCounts.values()).filter(count => count === 1).length;
-  const returningGuests = Array.from(guestCounts.values()).filter(count => count === 2).length;
-  const vipGuests = Array.from(guestCounts.values()).filter(count => count >= 3).length;
+  const newGuests = Array.from(guestCounts.values()).filter(
+    (count) => count === 1,
+  ).length;
+  const returningGuests = Array.from(guestCounts.values()).filter(
+    (count) => count === 2,
+  ).length;
+  const vipGuests = Array.from(guestCounts.values()).filter(
+    (count) => count >= 3,
+  ).length;
 
   return {
     newGuests,
     returningGuests,
     vipGuests,
-    repeatGuestRate: Math.round(((returningGuests + vipGuests) / guestCounts.size) * 100),
+    repeatGuestRate: Math.round(
+      ((returningGuests + vipGuests) / guestCounts.size) * 100,
+    ),
   };
 }

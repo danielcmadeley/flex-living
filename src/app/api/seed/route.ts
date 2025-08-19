@@ -13,9 +13,10 @@ export async function POST(request: NextRequest) {
       case "seed":
         // Regular seed (checks for existing data)
         result = await ReviewsQueries.seedMockData();
-        message = result.length > 0
-          ? `Seeded ${result.length} reviews`
-          : "No seeding needed - data already exists";
+        message =
+          result.length > 0
+            ? `Seeded ${result.length} reviews`
+            : "No seeding needed - data already exists";
         break;
 
       case "force":
@@ -52,10 +53,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            message: "Invalid action. Use: seed, force, reseed, clear, or count",
+            message:
+              "Invalid action. Use: seed, force, reseed, clear, or count",
             data: [],
           },
-          { status: 400 }
+          { status: 400 },
         );
     }
 
@@ -65,22 +67,22 @@ export async function POST(request: NextRequest) {
       data: result,
       count: result?.length || 0,
     });
-
   } catch (error) {
     console.error("Seeding error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Unknown error occurred",
+        message:
+          error instanceof Error ? error.message : "Unknown error occurred",
         data: [],
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const count = await ReviewsQueries.count();
     const stats = await ReviewsQueries.getStats();
@@ -93,17 +95,17 @@ export async function GET(request: NextRequest) {
         statistics: stats,
       },
     });
-
   } catch (error) {
     console.error("Error getting database status:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Unknown error occurred",
+        message:
+          error instanceof Error ? error.message : "Unknown error occurred",
         data: {},
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
