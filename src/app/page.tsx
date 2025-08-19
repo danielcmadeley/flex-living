@@ -97,12 +97,23 @@ export default function ReviewsDemo() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Hostaway Reviews Demo
-        </h1>
-        <p className="text-gray-600">
-          This demo shows how to fetch and display reviews from the Hostaway API
-        </p>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Hostaway Reviews Demo
+            </h1>
+            <p className="text-gray-600">
+              This demo shows how to fetch and display reviews from the Hostaway
+              API
+            </p>
+          </div>
+          <a
+            href="/dashboard"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium"
+          >
+            Manager Dashboard
+          </a>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-4">
