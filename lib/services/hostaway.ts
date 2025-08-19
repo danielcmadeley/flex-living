@@ -1,3 +1,5 @@
+import { HostawayReviewsResponse } from "../types/hostaway";
+
 interface TokenStorage {
   token: string;
   expiresAt: number;
@@ -83,7 +85,7 @@ class HostawayService {
   private async makeAuthenticatedRequest(
     endpoint: string,
     options: RequestInit = {},
-  ): Promise<any> {
+  ): Promise<HostawayReviewsResponse> {
     const token = await this.getAccessToken();
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -125,7 +127,7 @@ class HostawayService {
       );
     }
 
-    return response.json();
+    return response.json() as Promise<HostawayReviewsResponse>;
   }
 
   async getReviews(params?: {
@@ -134,9 +136,9 @@ class HostawayService {
     status?: string;
     limit?: number;
     offset?: number;
-  }): Promise<any> {
+  }): Promise<HostawayReviewsResponse> {
     // Since the API is sandboxed with no reviews, we'll return mock data
-    // In a real implementation, you would use:
+    // The params are prepared for when connecting to the real Hostaway API:
     // const queryParams = new URLSearchParams();
     // if (params?.listingId) queryParams.append('listingId', params.listingId.toString());
     // if (params?.type) queryParams.append('type', params.type);
@@ -145,11 +147,12 @@ class HostawayService {
     // if (params?.offset) queryParams.append('offset', params.offset.toString());
     // return this.makeAuthenticatedRequest(`/reviews?${queryParams.toString()}`);
 
-    // Mock data based on the provided JSON structure
+    // For now, using mock data regardless of params
+    console.log("Mock implementation - params received but not used:", params);
     return this.getMockReviews();
   }
 
-  private getMockReviews() {
+  private getMockReviews(): HostawayReviewsResponse {
     return {
       status: "success",
       result: [

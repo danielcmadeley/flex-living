@@ -20,7 +20,9 @@ export default function ReviewsDemo() {
   const [reviews, setReviews] = useState<NormalizedReview[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<ReviewsResponse["statistics"] | null>(
+    null,
+  );
 
   const fetchReviews = async (includeStats = false) => {
     setLoading(true);
@@ -215,7 +217,7 @@ export default function ReviewsDemo() {
               )}
             </div>
 
-            <p className="text-gray-800 mb-4">"{review.comment}"</p>
+            <p className="text-gray-800 mb-4">&ldquo;{review.comment}&rdquo;</p>
 
             {Object.keys(review.categories).length > 0 && (
               <div>
