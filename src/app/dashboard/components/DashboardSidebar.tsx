@@ -32,7 +32,6 @@ import {
   Home,
   Building,
   Database,
-  BarChart3,
   Search,
   Settings,
   LogOut,
@@ -76,12 +75,6 @@ const navigationItems: NavigationItem[] = [
     url: "/dashboard/reviews",
     icon: MessageSquare,
     description: "Review management and insights",
-  },
-  {
-    title: "Analytics",
-    url: "/dashboard/analytics",
-    icon: BarChart3,
-    description: "Advanced analytics and reports",
   },
   {
     title: "Search",
@@ -324,7 +317,6 @@ export function DashboardSidebar({
                 {pathname.startsWith("/dashboard/properties/") &&
                   "Property Details"}
                 {pathname === "/dashboard/reviews" && "Reviews"}
-                {pathname === "/dashboard/analytics" && "Analytics"}
                 {pathname === "/dashboard/search" && "Search"}
                 {pathname === "/dashboard/seed" && "Database Seeding"}
                 {pathname === "/dashboard/settings" && "Settings"}

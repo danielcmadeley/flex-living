@@ -20,7 +20,6 @@ import {
   Star,
   User,
   Calendar,
-  BarChart3,
   Database,
   Settings,
   Home,
@@ -541,14 +540,7 @@ function getNavigationItems(): SearchResult[] {
       url: "/dashboard/reviews",
       icon: <MessageSquare className="h-4 w-4" />,
     },
-    {
-      id: "nav-analytics",
-      type: "navigation",
-      title: "Analytics",
-      description: "Advanced analytics and reports",
-      url: "/dashboard/analytics",
-      icon: <BarChart3 className="h-4 w-4" />,
-    },
+
     {
       id: "nav-search",
       type: "navigation",
