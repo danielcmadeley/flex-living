@@ -17,12 +17,16 @@ import {
   StatCardSkeleton,
 } from "@/components/ui/skeleton";
 import {
-  ListingFilters,
-  useListingFilters,
-  type FilterOptions,
-} from "@/components/ListingFilters";
+  CombinedListingFilters,
+  useCombinedListingFilters,
+  type CombinedFilterOptions,
+} from "@/components/CombinedListingFilters";
+import {
+  ReviewSourceBadge,
+  ReviewSourceSummary,
+} from "@/components/ui/review-source-badge";
 import { slugToListingName } from "@/lib/utils/slugs";
-import { useListingByName } from "@/hooks/use-listings";
+import { useCombinedListingReviews } from "@/hooks/use-combined-listing-reviews";
 
 export default function ListingPage() {
   const params = useParams();
@@ -31,32 +35,38 @@ export default function ListingPage() {
   // Decode slug for use with the hook
   const decodedSlug = decodeURIComponent(slug);
 
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState<CombinedFilterOptions>({
     sortBy: "date",
     sortOrder: "desc",
     reviewType: "all",
+    sourceFilter: "all",
   });
 
-  // Fetch reviews for this specific listing - pass the slug directly
+  // Fetch combined reviews for this specific listing
   const {
-    data: reviews = [],
+    data: combinedData,
     isLoading,
     isError,
     error,
-    refetch,
-  } = useListingByName(decodedSlug);
+  } = useCombinedListingReviews({
+    listingName: decodedSlug,
+    includeGoogleReviews: true,
+    enabled: !!decodedSlug,
+  });
 
-  // Ensure reviews is always an array
-  const safeReviews = reviews || [];
+  const reviews = combinedData?.reviews || [];
+  const stats = combinedData?.stats;
 
   // Apply filters to reviews
-  const filteredReviews = useListingFilters(safeReviews, filters);
+  const filteredReviews = useCombinedListingFilters(reviews, filters);
 
-  // Get available categories for filtering
+  // Get available categories and languages for filtering
   const availableCategories = Array.from(
-    new Set(
-      safeReviews.flatMap((review) => Object.keys(review.categories || {})),
-    ),
+    new Set(reviews.flatMap((review) => Object.keys(review.categories || {}))),
+  );
+
+  const availableLanguages = Array.from(
+    new Set(reviews.map((review) => review.language).filter(Boolean)),
   );
 
   // Pagination
@@ -72,53 +82,12 @@ export default function ListingPage() {
 
   // Get listing name from reviews or convert from slug as fallback
   const listingName =
-    safeReviews.length > 0
-      ? safeReviews[0].listingName
-      : slugToListingName(decodedSlug);
-  // Calculate stats from reviews
-  const rawCategories = safeReviews.reduce(
-    (acc, review) => {
-      Object.entries(review.categories || {}).forEach(([category, rating]) => {
-        if (!acc[category]) acc[category] = [];
-        if (rating !== undefined) acc[category].push(rating);
-      });
-      return acc;
-    },
-    {} as Record<string, number[]>,
-  );
+    combinedData?.propertyName ||
+    (reviews.length > 0
+      ? reviews[0].listingName
+      : slugToListingName(decodedSlug));
 
-  // Convert category arrays to averages
-  const averagedCategories: Record<string, number> = {};
-  Object.keys(rawCategories).forEach((category) => {
-    const ratings = rawCategories[category];
-    if (ratings && ratings.length > 0) {
-      averagedCategories[category] =
-        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
-    }
-  });
-
-  const stats =
-    safeReviews.length > 0
-      ? {
-          overall:
-            safeReviews.reduce(
-              (sum, review) => sum + (review.overallRating || 0),
-              0,
-            ) / safeReviews.length,
-          totalReviews: safeReviews.length,
-          categories: averagedCategories,
-          reviewTypes: {
-            "host-to-guest": safeReviews.filter(
-              (r) => r.type === "host-to-guest",
-            ).length,
-            "guest-to-host": safeReviews.filter(
-              (r) => r.type === "guest-to-host",
-            ).length,
-          },
-        }
-      : null;
-
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -128,8 +97,9 @@ export default function ListingPage() {
 
   const renderStars = (rating: number) => {
     const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
+    const normalizedRating = rating > 5 ? rating / 2 : rating; // Handle both 1-5 and 1-10 scales
+    const fullStars = Math.floor(normalizedRating);
+    const hasHalfStar = normalizedRating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
@@ -147,7 +117,7 @@ export default function ListingPage() {
       );
     }
 
-    const emptyStars = 10 - Math.ceil(rating);
+    const emptyStars = 5 - Math.ceil(normalizedRating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
         <span key={`empty-${i}`} className="text-gray-300">
@@ -189,19 +159,24 @@ export default function ListingPage() {
               <p className="text-gray-600 mb-2">
                 Guest reviews for this premium London property
               </p>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                 <span>📍 London, UK</span>
                 {stats && (
                   <>
-                    <span>★ {stats.overall}/10 overall rating</span>
-                    <span>{stats.totalReviews} published reviews</span>
+                    <span>
+                      ★ {(stats.overall / 2).toFixed(1)}/5 overall rating
+                    </span>
+                    <span>{stats.totalReviews} total reviews</span>
                   </>
                 )}
               </div>
+              {stats && (
+                <ReviewSourceSummary sources={stats.sources} className="mt-2" />
+              )}
             </div>
             <div className="flex gap-2">
               <Link
-                href="/"
+                href="/listings"
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium"
               >
                 ← Back to Properties
@@ -218,7 +193,7 @@ export default function ListingPage() {
       )}
 
       {/* Loading State */}
-      {isLoading && safeReviews.length === 0 && (
+      {isLoading && reviews.length === 0 && (
         <div className="space-y-6">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -243,22 +218,24 @@ export default function ListingPage() {
       {isError && (
         <ErrorFallback
           error={error as Error}
-          onRetry={() => refetch()}
+          onRetry={() => window.location.reload()}
           title="Failed to load reviews"
           description={`We couldn't load reviews for ${listingName}. Please try again.`}
         />
       )}
 
-      {/* Statistics */}
+      {/* Enhanced Statistics */}
       {stats && (
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Property Statistics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white p-4 rounded shadow">
               <h3 className="font-medium text-gray-700">Overall Rating</h3>
               <div className="flex items-center mt-1">
-                <span className="text-2xl font-bold">{stats.overall}</span>
-                <span className="text-sm text-gray-500 ml-1">/10</span>
+                <span className="text-2xl font-bold">
+                  {(stats.overall / 2).toFixed(1)}
+                </span>
+                <span className="text-sm text-gray-500 ml-1">/5</span>
                 <div className="ml-2 flex items-center">
                   {renderStars(stats.overall)}
                 </div>
@@ -271,14 +248,31 @@ export default function ListingPage() {
             </div>
 
             <div className="bg-white p-4 rounded shadow">
-              <h3 className="font-medium text-gray-700">Review Types</h3>
+              <h3 className="font-medium text-gray-700">Google Reviews</h3>
               <div className="text-sm">
-                <div>
-                  Host to Guest: {stats.reviewTypes["host-to-guest"] || 0}
+                <div className="text-lg font-bold text-blue-600">
+                  {stats.sources.google.count}
                 </div>
-                <div>
-                  Guest to Host: {stats.reviewTypes["guest-to-host"] || 0}
+                {stats.sources.google.averageRating > 0 && (
+                  <div className="text-xs text-gray-500">
+                    Avg: {(stats.sources.google.averageRating / 2).toFixed(1)}/5
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-medium text-gray-700">Verified Guests</h3>
+              <div className="text-sm">
+                <div className="text-lg font-bold text-green-600">
+                  {stats.sources.hostaway.count}
                 </div>
+                {stats.sources.hostaway.averageRating > 0 && (
+                  <div className="text-xs text-gray-500">
+                    Avg: {(stats.sources.hostaway.averageRating / 2).toFixed(1)}
+                    /5
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -286,7 +280,7 @@ export default function ListingPage() {
           {Object.keys(stats.categories).length > 0 && (
             <div className="mt-4">
               <h3 className="font-medium text-gray-700 mb-2">
-                Category Ratings
+                Category Ratings (from verified guests)
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
                 {Object.entries(stats.categories).map(([category, rating]) => (
@@ -299,10 +293,10 @@ export default function ListingPage() {
                     </div>
                     <div className="text-lg font-bold text-blue-600">
                       {typeof rating === "number" && !isNaN(Number(rating))
-                        ? Number(rating).toFixed(1)
+                        ? (Number(rating) / 2).toFixed(1)
                         : "N/A"}
                     </div>
-                    <div className="text-xs text-gray-500">/10</div>
+                    <div className="text-xs text-gray-500">/5</div>
                   </div>
                 ))}
               </div>
@@ -316,9 +310,9 @@ export default function ListingPage() {
         <div className="space-y-6">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <h2 className="text-xl font-semibold">
-              Guest Reviews ({safeReviews.length})
+              Guest Reviews ({reviews.length})
             </h2>
-            {safeReviews.length > 0 && (
+            {reviews.length > 0 && (
               <PaginationInfo
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -328,12 +322,14 @@ export default function ListingPage() {
             )}
           </div>
 
-          {/* Advanced Filters */}
-          {safeReviews.length > 0 && (
-            <ListingFilters
+          {/* Enhanced Filters */}
+          {reviews.length > 0 && (
+            <CombinedListingFilters
               onFiltersChange={setFilters}
               reviewCount={filteredReviews.length}
               availableCategories={availableCategories}
+              availableLanguages={availableLanguages}
+              sourceStats={stats?.sources}
               isLoading={isLoading}
             />
           )}
@@ -354,26 +350,34 @@ export default function ListingPage() {
             >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{review.guestName}</h3>
-                  <div className="flex items-center mt-1 gap-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        review.type === "host-to-guest"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {review.type === "host-to-guest"
-                        ? "Host → Guest"
-                        : "Guest → Host"}
-                    </span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-semibold text-lg">{review.author}</h3>
+                    {review.authorPhoto && (
+                      <img
+                        src={review.authorPhoto}
+                        alt={review.author}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ReviewSourceBadge
+                      source={review.source}
+                      type={review.type}
+                    />
                     <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
                       Published
                     </span>
                     <span className="text-sm text-gray-500">
-                      {formatDate(review.submittedAt)}
+                      {review.relativeTime || formatDate(review.submittedAt)}
                     </span>
                   </div>
+                  {review.language && review.language !== "en" && (
+                    <div className="text-xs text-gray-500 mb-2">
+                      Language: {review.language.toUpperCase()}
+                      {review.translated && " (translated)"}
+                    </div>
+                  )}
                 </div>
 
                 {review.overallRating && (
@@ -382,7 +386,9 @@ export default function ListingPage() {
                       {renderStars(review.overallRating)}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      {review.overallRating}/10
+                      {review.source === "google"
+                        ? `${review.rating}/5`
+                        : `${review.overallRating}/10`}
                     </div>
                   </div>
                 )}
@@ -392,28 +398,42 @@ export default function ListingPage() {
                 &ldquo;{review.comment}&rdquo;
               </p>
 
-              {Object.keys(review.categories).length > 0 && (
-                <div className="border-t pt-4">
-                  <h4 className="font-medium text-sm text-gray-700 mb-3">
-                    Category Ratings:
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    {Object.entries(review.categories)
-                      .filter(([, rating]) => rating !== undefined)
-                      .map(([category, rating]) => (
-                        <div
-                          key={category}
-                          className="bg-gray-50 p-2 rounded text-center"
-                        >
-                          <div className="capitalize font-medium text-xs text-gray-700 mb-1">
-                            {category.replace("_", " ")}
+              {review.source === "hostaway" &&
+                Object.keys(review.categories).length > 0 && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium text-sm text-gray-700 mb-3">
+                      Category Ratings:
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {Object.entries(review.categories)
+                        .filter(([, rating]) => rating !== undefined)
+                        .map(([category, rating]) => (
+                          <div
+                            key={category}
+                            className="bg-gray-50 p-2 rounded text-center"
+                          >
+                            <div className="capitalize font-medium text-xs text-gray-700 mb-1">
+                              {category.replace("_", " ")}
+                            </div>
+                            <div className="text-sm font-bold text-blue-600">
+                              {Number(rating)}/10
+                            </div>
                           </div>
-                          <div className="text-sm font-bold text-blue-600">
-                            {Number(rating)}/10
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                    </div>
                   </div>
+                )}
+
+              {review.authorUrl && (
+                <div className="border-t pt-3 mt-3">
+                  <a
+                    href={review.authorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    View on Google →
+                  </a>
                 </div>
               )}
             </div>
@@ -431,7 +451,7 @@ export default function ListingPage() {
           )}
 
           {filteredReviews.length === 0 &&
-            safeReviews.length > 0 &&
+            reviews.length > 0 &&
             !isLoading &&
             !isError && (
               <div className="text-center py-12 text-gray-500">
@@ -449,6 +469,7 @@ export default function ListingPage() {
                       sortBy: "date",
                       sortOrder: "desc",
                       reviewType: "all",
+                      sourceFilter: "all",
                     })
                   }
                   className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
@@ -458,22 +479,20 @@ export default function ListingPage() {
               </div>
             )}
 
-          {safeReviews.length === 0 && !isLoading && !isError && (
+          {reviews.length === 0 && !isLoading && !isError && (
             <div className="text-center py-12 text-gray-500">
               <div className="mb-4 text-4xl">📝</div>
-              <div className="text-lg font-medium mb-2">
-                No published reviews found
-              </div>
+              <div className="text-lg font-medium mb-2">No reviews found</div>
               <div className="text-sm">
                 Reviews for {listingName} will appear here once they are
-                published
+                available from Google or verified guests
               </div>
               <div className="text-xs mt-2 text-gray-400">
-                Only verified reviews from actual guests are displayed
+                We show both Google reviews and verified guest reviews
               </div>
               <div className="mt-6">
                 <Link
-                  href="/"
+                  href="/listings"
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   ← Back to all properties
@@ -485,11 +504,11 @@ export default function ListingPage() {
       )}
 
       {/* Footer */}
-      {safeReviews.length > 0 && !isLoading && !isError && (
+      {reviews.length > 0 && !isLoading && !isError && (
         <div className="mt-12 pt-6 border-t">
           <div className="text-center">
             <Link
-              href="/"
+              href="/listings"
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
               ← View all Flex Living properties
@@ -513,7 +532,7 @@ export default function ListingPage() {
               {listingName || "this property"}. Please try refreshing the page.
             </p>
             <Link
-              href="/"
+              href="/listings"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
             >
               ← Back to Properties

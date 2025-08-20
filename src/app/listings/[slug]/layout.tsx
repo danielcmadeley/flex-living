@@ -7,31 +7,88 @@ interface Props {
   children: React.ReactNode;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const listingName = slugToListingName(slug);
+interface ListingData {
+  reviewCount: number;
+  averageRating: number;
+  googleReviewCount: number;
+  googleAverageRating: number;
+  listingName: string;
+}
 
-  // Fetch listing data for more accurate metadata
+async function fetchListingData(listingName: string): Promise<ListingData> {
   let reviewCount = 0;
   let averageRating = 0;
+  let googleReviewCount = 0;
+  let googleAverageRating = 0;
+  let hostawayData: any = null;
 
   try {
-    const response = await fetch(
+    // Fetch Hostaway reviews
+    const hostawayResponse = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/reviews/hostaway?status=published&listingName=${encodeURIComponent(listingName)}&includeStats=true`,
       { cache: "no-store" },
     );
 
-    if (response.ok) {
-      const data = await response.json();
-      reviewCount = data.total || 0;
-      averageRating = data.statistics?.overall || 0;
+    if (hostawayResponse.ok) {
+      hostawayData = await hostawayResponse.json();
+      reviewCount = hostawayData.total || 0;
+      averageRating = hostawayData.statistics?.overall || 0;
+    }
+
+    // Fetch Google reviews
+    try {
+      const googleResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/reviews/google?propertyName=${encodeURIComponent(listingName)}`,
+        { cache: "no-store" },
+      );
+
+      if (googleResponse.ok) {
+        const googleData = await googleResponse.json();
+        googleReviewCount = googleData.reviews?.length || 0;
+        googleAverageRating = googleData.averageRating || 0;
+
+        // Combine totals
+        reviewCount += googleReviewCount;
+
+        // Calculate combined average rating (convert Google 1-5 to 1-10 scale)
+        if (averageRating > 0 && googleAverageRating > 0) {
+          const hostawayTotal = (hostawayData?.total || 0) * averageRating;
+          const googleTotal = googleReviewCount * (googleAverageRating * 2); // Convert to 1-10 scale
+          const combinedTotal = hostawayTotal + googleTotal;
+          averageRating = combinedTotal / reviewCount;
+        } else if (googleAverageRating > 0 && averageRating === 0) {
+          averageRating = googleAverageRating * 2; // Convert to 1-10 scale
+        }
+      }
+    } catch (googleError) {
+      console.error("Error fetching Google reviews for metadata:", googleError);
+      // Continue without Google reviews
     }
   } catch (error) {
     console.error("Error fetching listing data for metadata:", error);
   }
 
+  return {
+    reviewCount,
+    averageRating,
+    googleReviewCount,
+    googleAverageRating,
+    listingName,
+  };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const listingName = slugToListingName(slug);
+
+  const data = await fetchListingData(listingName);
+
   const title = `${listingName} - Guest Reviews | Flex Living`;
-  const description = `Read ${reviewCount} verified guest reviews for ${listingName}, a premium London property by Flex Living. Average rating: ${averageRating}/10. Book with confidence.`;
+  const combinedReviewText =
+    data.googleReviewCount > 0
+      ? `${data.reviewCount} reviews (${data.googleReviewCount} Google reviews included)`
+      : `${data.reviewCount} verified guest reviews`;
+  const description = `Read ${combinedReviewText} for ${listingName}, a premium London property by Flex Living. Average rating: ${(data.averageRating / 2).toFixed(1)}/5. Book with confidence.`;
 
   return {
     title,
@@ -86,9 +143,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     other: {
       "property:type": "rental",
       "property:location": "London, UK",
-      "rating:value": averageRating.toString(),
-      "rating:scale": "10",
-      "review:count": reviewCount.toString(),
+      "rating:value": (data.averageRating / 2).toFixed(1),
+      "rating:scale": "5",
+      "review:count": data.reviewCount.toString(),
+      "google:review:count": data.googleReviewCount.toString(),
+      "verified:review:count": (
+        data.reviewCount - data.googleReviewCount
+      ).toString(),
     },
   };
 }
@@ -100,6 +161,9 @@ export default async function ListingLayout({ children, params }: Props) {
     notFound();
   }
 
+  const listingName = slugToListingName(slug);
+  const data = await fetchListingData(listingName);
+
   return (
     <>
       {/* JSON-LD structured data for SEO */}
@@ -109,8 +173,8 @@ export default async function ListingLayout({ children, params }: Props) {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "LodgingBusiness",
-            name: slugToListingName(slug),
-            description: `Premium London accommodation - ${slugToListingName(slug)}`,
+            name: listingName,
+            description: `Premium London accommodation - ${listingName}`,
             address: {
               "@type": "PostalAddress",
               addressLocality: "London",
@@ -139,10 +203,10 @@ export default async function ListingLayout({ children, params }: Props) {
             hasMap: `https://maps.google.com/?q=London,UK`,
             aggregateRating: {
               "@type": "AggregateRating",
-              ratingValue: "9.0", // You can make this dynamic
-              bestRating: "10",
+              ratingValue: (data.averageRating / 2).toFixed(1),
+              bestRating: "5",
               worstRating: "1",
-              ratingCount: "50", // You can make this dynamic
+              ratingCount: data.reviewCount.toString(),
             },
           }),
         }}
