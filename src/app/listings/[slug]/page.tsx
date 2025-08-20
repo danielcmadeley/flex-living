@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Metadata } from "next";
+
 import { NormalizedReview } from "@/lib/types/hostaway";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import {
@@ -65,23 +65,16 @@ export default function ListingPage() {
 
   // Pagination
   const REVIEWS_PER_PAGE = 5;
-  const {
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    goToPage,
-    hasNext,
-    hasPrevious,
-  } = usePagination({
-    totalItems: filteredReviews.length,
-    itemsPerPage: REVIEWS_PER_PAGE,
-    initialPage: 1,
-  });
+  const { currentPage, totalPages, startIndex, endIndex, goToPage } =
+    usePagination({
+      totalItems: filteredReviews.length,
+      itemsPerPage: REVIEWS_PER_PAGE,
+      initialPage: 1,
+    });
 
   const paginatedReviews = filteredReviews.slice(startIndex, endIndex);
 
-  const fetchListingReviews = async () => {
+  const fetchListingReviews = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -130,13 +123,13 @@ export default function ListingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
     if (slug) {
       fetchListingReviews();
     }
-  }, [slug, retryCount]);
+  }, [slug, retryCount, fetchListingReviews]);
 
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -422,7 +415,7 @@ export default function ListingPage() {
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     {Object.entries(review.categories)
-                      .filter(([category, rating]) => rating !== undefined)
+                      .filter(([, rating]) => rating !== undefined)
                       .map(([category, rating]) => (
                         <div
                           key={category}

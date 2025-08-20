@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, TrendingUp, Users, Filter, Calendar, BarChart3 } from "lucide-react";
+import { Search, TrendingUp, Users, BarChart3, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NormalizedReview } from "@/lib/types/hostaway";
 
@@ -27,29 +27,72 @@ interface SearchAnalyticsProps {
   className?: string;
 }
 
-export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
+export function SearchAnalytics({ className }: SearchAnalyticsProps) {
   const [searchHistory, setSearchHistory] = useState<SearchTerm[]>([]);
   const [timeRange, setTimeRange] = useState<"day" | "week" | "month">("week");
-  const [viewMode, setViewMode] = useState<"overview" | "patterns" | "filters">("overview");
+  const [viewMode, setViewMode] = useState<"overview" | "patterns" | "filters">(
+    "overview",
+  );
 
   // Mock search analytics data (in a real app, this would come from your analytics service)
   const mockSearchData = useMemo(() => {
     const terms: SearchTerm[] = [
-      { term: "clean", count: 45, lastSearched: new Date(Date.now() - 2 * 60 * 60 * 1000) },
-      { term: "location", count: 38, lastSearched: new Date(Date.now() - 4 * 60 * 60 * 1000) },
-      { term: "comfortable", count: 32, lastSearched: new Date(Date.now() - 1 * 60 * 60 * 1000) },
-      { term: "kitchen", count: 28, lastSearched: new Date(Date.now() - 6 * 60 * 60 * 1000) },
-      { term: "bathroom", count: 25, lastSearched: new Date(Date.now() - 3 * 60 * 60 * 1000) },
-      { term: "wifi", count: 22, lastSearched: new Date(Date.now() - 5 * 60 * 60 * 1000) },
-      { term: "host", count: 20, lastSearched: new Date(Date.now() - 7 * 60 * 60 * 1000) },
-      { term: "transport", count: 18, lastSearched: new Date(Date.now() - 8 * 60 * 60 * 1000) },
-      { term: "noise", count: 15, lastSearched: new Date(Date.now() - 9 * 60 * 60 * 1000) },
-      { term: "value", count: 12, lastSearched: new Date(Date.now() - 10 * 60 * 60 * 1000) },
+      {
+        term: "clean",
+        count: 45,
+        lastSearched: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+      {
+        term: "location",
+        count: 38,
+        lastSearched: new Date(Date.now() - 4 * 60 * 60 * 1000),
+      },
+      {
+        term: "comfortable",
+        count: 32,
+        lastSearched: new Date(Date.now() - 1 * 60 * 60 * 1000),
+      },
+      {
+        term: "kitchen",
+        count: 28,
+        lastSearched: new Date(Date.now() - 6 * 60 * 60 * 1000),
+      },
+      {
+        term: "bathroom",
+        count: 25,
+        lastSearched: new Date(Date.now() - 3 * 60 * 60 * 1000),
+      },
+      {
+        term: "wifi",
+        count: 22,
+        lastSearched: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      },
+      {
+        term: "host",
+        count: 20,
+        lastSearched: new Date(Date.now() - 7 * 60 * 60 * 1000),
+      },
+      {
+        term: "transport",
+        count: 18,
+        lastSearched: new Date(Date.now() - 8 * 60 * 60 * 1000),
+      },
+      {
+        term: "noise",
+        count: 15,
+        lastSearched: new Date(Date.now() - 9 * 60 * 60 * 1000),
+      },
+      {
+        term: "value",
+        count: 12,
+        lastSearched: new Date(Date.now() - 10 * 60 * 60 * 1000),
+      },
     ];
 
     const patterns: SearchPattern[] = Array.from({ length: 24 }, (_, hour) => ({
       hour,
-      count: Math.floor(Math.random() * 20) + (hour >= 9 && hour <= 17 ? 15 : 5),
+      count:
+        Math.floor(Math.random() * 20) + (hour >= 9 && hour <= 17 ? 15 : 5),
     }));
 
     const filterUsage: FilterUsage[] = [
@@ -60,13 +103,16 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
     ];
 
     return { terms, patterns, filterUsage };
-  }, [timeRange]);
+  }, []);
 
   useEffect(() => {
     setSearchHistory(mockSearchData.terms);
   }, [mockSearchData.terms]);
 
-  const totalSearches = searchHistory.reduce((sum, term) => sum + term.count, 0);
+  const totalSearches = searchHistory.reduce(
+    (sum, term) => sum + term.count,
+    0,
+  );
   const avgSearchesPerDay = Math.round(totalSearches / 7); // Assuming week view
   const topSearchTerm = searchHistory[0];
 
@@ -80,7 +126,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
 
     if (diffInHours < 1) return "< 1 hour ago";
     if (diffInHours === 1) return "1 hour ago";
@@ -96,7 +144,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Search Analytics</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Search Analytics
+          </h2>
           <p className="text-sm text-gray-600">
             Understand how users search and filter reviews
           </p>
@@ -121,8 +171,12 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
           <div className="bg-white p-4 rounded-lg border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Searches</p>
-                <p className="text-2xl font-bold text-gray-900">{totalSearches}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Searches
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalSearches}
+                </p>
               </div>
               <Search className="h-8 w-8 text-blue-500" />
             </div>
@@ -131,8 +185,12 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
           <div className="bg-white p-4 rounded-lg border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Daily Average</p>
-                <p className="text-2xl font-bold text-gray-900">{avgSearchesPerDay}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Daily Average
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {avgSearchesPerDay}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-500" />
             </div>
@@ -142,8 +200,12 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Top Search</p>
-                <p className="text-2xl font-bold text-gray-900">"{topSearchTerm?.term}"</p>
-                <p className="text-xs text-gray-500">{topSearchTerm?.count} searches</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  &ldquo;{topSearchTerm?.term}&rdquo;
+                </p>
+                <p className="text-xs text-gray-500">
+                  {topSearchTerm?.count} searches
+                </p>
               </div>
               <Users className="h-8 w-8 text-purple-500" />
             </div>
@@ -152,8 +214,12 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
           <div className="bg-white p-4 rounded-lg border">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Unique Terms</p>
-                <p className="text-2xl font-bold text-gray-900">{searchHistory.length}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Unique Terms
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {searchHistory.length}
+                </p>
               </div>
               <BarChart3 className="h-8 w-8 text-orange-500" />
             </div>
@@ -178,7 +244,7 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
                   "flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors",
                   viewMode === tab.id
                     ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -199,24 +265,32 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
               {searchHistory.slice(0, 8).map((term, index) => {
                 const trend = getSearchTrend(term);
                 return (
-                  <div key={term.term} className="flex items-center justify-between">
+                  <div
+                    key={term.term}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-gray-500 w-6">
                         #{index + 1}
                       </span>
-                      <span className="font-medium text-gray-900">"{term.term}"</span>
+                      <span className="font-medium text-gray-900">
+                        &ldquo;{term.term}&rdquo;
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">{term.count}</span>
+                      <span className="text-sm text-gray-600">
+                        {term.count}
+                      </span>
                       <span
                         className={cn(
                           "text-xs px-2 py-1 rounded-full",
                           trend.isPositive
                             ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                            : "bg-red-100 text-red-800",
                         )}
                       >
-                        {trend.isPositive ? "+" : ""}{trend.change}%
+                        {trend.isPositive ? "+" : ""}
+                        {trend.change}%
                       </span>
                     </div>
                   </div>
@@ -227,18 +301,27 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
 
           {/* Recent Activity */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Recent Search Activity</h3>
+            <h3 className="font-medium text-gray-900 mb-4">
+              Recent Search Activity
+            </h3>
             <div className="space-y-3">
               {searchHistory.slice(0, 8).map((term) => (
-                <div key={`${term.term}-recent`} className="flex items-center justify-between">
+                <div
+                  key={`${term.term}-recent`}
+                  className="flex items-center justify-between"
+                >
                   <div>
-                    <span className="font-medium text-gray-900">"{term.term}"</span>
+                    <span className="font-medium text-gray-900">
+                      &ldquo;{term.term}&rdquo;
+                    </span>
                     <p className="text-xs text-gray-500">
                       {formatTimeAgo(term.lastSearched)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-medium text-gray-900">{term.count}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {term.count}
+                    </span>
                     <p className="text-xs text-gray-500">searches</p>
                   </div>
                 </div>
@@ -250,13 +333,18 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
 
       {viewMode === "patterns" && (
         <div className="bg-white rounded-lg border p-6">
-          <h3 className="font-medium text-gray-900 mb-4">Search Activity by Hour</h3>
+          <h3 className="font-medium text-gray-900 mb-4">
+            Search Activity by Hour
+          </h3>
           <div className="grid grid-cols-12 gap-1">
             {mockSearchData.patterns.map((pattern) => (
               <div key={pattern.hour} className="text-center">
                 <div
                   className="bg-blue-200 rounded-t mb-1 transition-all hover:bg-blue-300"
-                  style={{ height: `${(pattern.count / 35) * 100}px`, minHeight: "4px" }}
+                  style={{
+                    height: `${(pattern.count / 35) * 100}px`,
+                    minHeight: "4px",
+                  }}
                   title={`${pattern.hour}:00 - ${pattern.count} searches`}
                 />
                 <span className="text-xs text-gray-500">
@@ -276,7 +364,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Filter Usage */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Filter Usage Statistics</h3>
+            <h3 className="font-medium text-gray-900 mb-4">
+              Filter Usage Statistics
+            </h3>
             <div className="space-y-4">
               {mockSearchData.filterUsage.map((filter) => (
                 <div key={filter.filterType}>
@@ -284,7 +374,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
                     <span className="text-sm font-medium text-gray-700">
                       {filter.filterType}
                     </span>
-                    <span className="text-sm text-gray-600">{filter.percentage}%</span>
+                    <span className="text-sm text-gray-600">
+                      {filter.percentage}%
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
@@ -292,7 +384,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
                       style={{ width: `${filter.percentage}%` }}
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{filter.count} uses</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {filter.count} uses
+                  </p>
                 </div>
               ))}
             </div>
@@ -300,7 +394,9 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
 
           {/* Filter Combinations */}
           <div className="bg-white rounded-lg border p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Popular Filter Combinations</h3>
+            <h3 className="font-medium text-gray-900 mb-4">
+              Popular Filter Combinations
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
                 <span className="text-sm">Rating + Date Range</span>
@@ -327,10 +423,23 @@ export function SearchAnalytics({ reviews, className }: SearchAnalyticsProps) {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-medium text-blue-900 mb-2">💡 Insights</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li>• "Clean" and "location" are the most searched terms - consider highlighting these in property descriptions</li>
-          <li>• Most searches happen during business hours - optimize for mobile users browsing during commute</li>
-          <li>• Rating filters are used most frequently - ensure review ratings are prominently displayed</li>
-          <li>• Users often combine multiple filters - improve filter UX for complex searches</li>
+          <li>
+            • &ldquo;Clean&rdquo; and &ldquo;location&rdquo; are the most
+            searched terms - consider highlighting these in property
+            descriptions
+          </li>
+          <li>
+            • Most searches happen during business hours - optimize for mobile
+            users browsing during commute
+          </li>
+          <li>
+            • Rating filters are used most frequently - ensure review ratings
+            are prominently displayed
+          </li>
+          <li>
+            • Users often combine multiple filters - improve filter UX for
+            complex searches
+          </li>
         </ul>
       </div>
     </div>

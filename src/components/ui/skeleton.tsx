@@ -205,7 +205,7 @@ export function DashboardSkeleton({ className }: SkeletonProps) {
 // Utility function to create skeleton loaders
 export function createSkeletonArray(
   count: number,
-  Component: React.ComponentType<any>,
+  Component: React.ComponentType<Record<string, unknown>>,
 ) {
   return Array.from({ length: count }, (_, i) => <Component key={i} />);
 }

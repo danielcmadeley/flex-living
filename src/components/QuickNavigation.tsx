@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, List, Search, Star, Calendar } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Search,
+  Star,
+  Calendar,
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +25,7 @@ export function QuickNavigation({
   availableListings = [],
   reviewCount,
   averageRating,
-  className
+  className,
 }: QuickNavigationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(-1);
@@ -30,48 +37,21 @@ export function QuickNavigation({
 
   // Find current listing index
   useEffect(() => {
-    const index = availableListings.findIndex(listing => listing === currentListingName);
+    const index = availableListings.findIndex(
+      (listing) => listing === currentListingName,
+    );
     setCurrentIndex(index);
   }, [currentListingName, availableListings]);
 
-  const previousListing = currentIndex > 0 ? availableListings[currentIndex - 1] : null;
-  const nextListing = currentIndex < availableListings.length - 1 ? availableListings[currentIndex + 1] : null;
+  const previousListing =
+    currentIndex > 0 ? availableListings[currentIndex - 1] : null;
+  const nextListing =
+    currentIndex < availableListings.length - 1
+      ? availableListings[currentIndex + 1]
+      : null;
 
   const formatRating = (rating: number) => {
     return rating.toFixed(1);
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <span key={i} className="text-yellow-400">
-          ★
-        </span>
-      );
-    }
-
-    if (hasHalfStar) {
-      stars.push(
-        <span key="half" className="text-yellow-400">
-          ☆
-        </span>
-      );
-    }
-
-    const emptyStars = 10 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <span key={`empty-${i}`} className="text-gray-300">
-          ☆
-        </span>
-      );
-    }
-
-    return stars;
   };
 
   return (
@@ -160,7 +140,9 @@ export function QuickNavigation({
         <div className="border-t bg-gray-50 max-h-64 overflow-y-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-900">All Properties</h3>
+              <h3 className="text-sm font-medium text-gray-900">
+                All Properties
+              </h3>
               <Link
                 href="/"
                 className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -179,7 +161,7 @@ export function QuickNavigation({
                     "block px-3 py-2 rounded text-sm transition-colors",
                     listing === currentListingName
                       ? "bg-blue-100 text-blue-900 font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-700 hover:bg-gray-100",
                   )}
                   onClick={() => setIsExpanded(false)}
                 >
@@ -217,9 +199,13 @@ export function QuickNavigation({
 
             {/* Keyboard Shortcuts Hint */}
             <div className="text-gray-400 hidden sm:block">
-              <span className="border border-gray-300 rounded px-1 py-0.5 text-xs">←</span>
+              <span className="border border-gray-300 rounded px-1 py-0.5 text-xs">
+                ←
+              </span>
               <span className="mx-1">/</span>
-              <span className="border border-gray-300 rounded px-1 py-0.5 text-xs">→</span>
+              <span className="border border-gray-300 rounded px-1 py-0.5 text-xs">
+                →
+              </span>
               <span className="ml-1">navigate</span>
             </div>
           </div>
@@ -232,27 +218,33 @@ export function QuickNavigation({
 // Hook for keyboard navigation
 export function useKeyboardNavigation(
   previousListing: string | null,
-  nextListing: string | null
+  nextListing: string | null,
 ) {
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       // Only handle if no input is focused
-      if (document.activeElement?.tagName === 'INPUT' ||
-          document.activeElement?.tagName === 'TEXTAREA') {
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
         return;
       }
 
-      if (event.key === 'ArrowLeft' && previousListing) {
-        const slug = encodeURIComponent(previousListing.toLowerCase().replace(/\s+/g, "-"));
+      if (event.key === "ArrowLeft" && previousListing) {
+        const slug = encodeURIComponent(
+          previousListing.toLowerCase().replace(/\s+/g, "-"),
+        );
         window.location.href = `/listings/${slug}`;
-      } else if (event.key === 'ArrowRight' && nextListing) {
-        const slug = encodeURIComponent(nextListing.toLowerCase().replace(/\s+/g, "-"));
+      } else if (event.key === "ArrowRight" && nextListing) {
+        const slug = encodeURIComponent(
+          nextListing.toLowerCase().replace(/\s+/g, "-"),
+        );
         window.location.href = `/listings/${slug}`;
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [previousListing, nextListing]);
 }
 
@@ -261,7 +253,7 @@ export function MobileQuickNav({
   currentListingName,
   previousListing,
   nextListing,
-  className
+  className,
 }: {
   currentListingName: string;
   previousListing: string | null;
@@ -273,7 +265,12 @@ export function MobileQuickNav({
   };
 
   return (
-    <div className={cn("flex items-center justify-between bg-white border rounded-lg p-3", className)}>
+    <div
+      className={cn(
+        "flex items-center justify-between bg-white border rounded-lg p-3",
+        className,
+      )}
+    >
       {previousListing ? (
         <Link
           href={`/listings/${createSlug(previousListing)}`}

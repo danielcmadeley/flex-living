@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { slugToListingName, isValidSlug } from "@/lib/utils/slugs";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
   children: React.ReactNode;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const listingName = slugToListingName(params.slug);
+  const { slug } = await params;
+  const listingName = slugToListingName(slug);
 
   // Fetch listing data for more accurate metadata
   let reviewCount = 0;
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
     alternates: {
-      canonical: `/listings/${params.slug}`,
+      canonical: `/listings/${slug}`,
     },
     keywords: [
       "London accommodation",
@@ -92,9 +93,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function ListingLayout({ children, params }: Props) {
+export default async function ListingLayout({ children, params }: Props) {
   // Validate slug format
-  const slug = params.slug;
+  const { slug } = await params;
   if (!slug || slug.length === 0 || !isValidSlug(slug)) {
     notFound();
   }

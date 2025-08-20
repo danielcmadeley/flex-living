@@ -33,7 +33,7 @@ interface ListingSummary {
 }
 
 export default function ListingsPage() {
-  const [reviews, setReviews] = useState<NormalizedReview[]>([]);
+  const [, setReviews] = useState<NormalizedReview[]>([]);
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

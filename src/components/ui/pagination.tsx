@@ -23,7 +23,7 @@ export function Pagination({
   const getPageRange = () => {
     const delta = Math.floor(showPages / 2);
     let start = Math.max(1, currentPage - delta);
-    let end = Math.min(totalPages, start + showPages - 1);
+    const end = Math.min(totalPages, start + showPages - 1);
 
     // Adjust start if we're near the end
     if (end - start + 1 < showPages) {
@@ -154,7 +154,6 @@ interface PaginationInfoProps {
 
 export function PaginationInfo({
   currentPage,
-  totalPages,
   totalItems,
   itemsPerPage,
   className,

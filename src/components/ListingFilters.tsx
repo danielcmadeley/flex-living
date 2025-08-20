@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Filter, Calendar, Star, ChevronDown, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Filter, Star, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NormalizedReview } from "@/lib/types/hostaway";
 
 export interface FilterOptions {
   searchTerm?: string;
@@ -40,6 +41,15 @@ export function ListingFilters({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
+  const handleFilterChange = useCallback(
+    (newFilters: Partial<FilterOptions>) => {
+      const updatedFilters = { ...filters, ...newFilters };
+      setFilters(updatedFilters);
+      onFiltersChange(updatedFilters);
+    },
+    [filters, onFiltersChange],
+  );
+
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,13 +57,7 @@ export function ListingFilters({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  const handleFilterChange = (newFilters: Partial<FilterOptions>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    onFiltersChange(updatedFilters);
-  };
+  }, [searchValue, handleFilterChange]);
 
   const clearFilters = () => {
     const defaultFilters: FilterOptions = {
@@ -330,7 +334,10 @@ export function ListingFilters({
 }
 
 // Helper hook for using filters
-export function useListingFilters(reviews: any[], filters: FilterOptions) {
+export function useListingFilters(
+  reviews: NormalizedReview[],
+  filters: FilterOptions,
+) {
   return reviews
     .filter((review) => {
       // Search filter
