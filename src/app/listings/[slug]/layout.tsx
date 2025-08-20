@@ -20,7 +20,12 @@ async function fetchListingData(listingName: string): Promise<ListingData> {
   let averageRating = 0;
   let googleReviewCount = 0;
   let googleAverageRating = 0;
-  let hostawayData: any = null;
+  let hostawayData: {
+    reviews: unknown[];
+    stats: { averageRating: number; reviewCount: number };
+    total?: number;
+    statistics?: { overall: number };
+  } | null = null;
 
   try {
     // Fetch Hostaway reviews
@@ -31,8 +36,12 @@ async function fetchListingData(listingName: string): Promise<ListingData> {
 
     if (hostawayResponse.ok) {
       hostawayData = await hostawayResponse.json();
-      reviewCount = hostawayData.total || 0;
-      averageRating = hostawayData.statistics?.overall || 0;
+      reviewCount =
+        hostawayData?.total || hostawayData?.stats?.reviewCount || 0;
+      averageRating =
+        hostawayData?.statistics?.overall ||
+        hostawayData?.stats?.averageRating ||
+        0;
     }
 
     // Fetch Google reviews
@@ -52,7 +61,9 @@ async function fetchListingData(listingName: string): Promise<ListingData> {
 
         // Calculate combined average rating (convert Google 1-5 to 1-10 scale)
         if (averageRating > 0 && googleAverageRating > 0) {
-          const hostawayTotal = (hostawayData?.total || 0) * averageRating;
+          const hostawayTotal =
+            (hostawayData?.total || hostawayData?.stats?.reviewCount || 0) *
+            averageRating;
           const googleTotal = googleReviewCount * (googleAverageRating * 2); // Convert to 1-10 scale
           const combinedTotal = hostawayTotal + googleTotal;
           averageRating = combinedTotal / reviewCount;

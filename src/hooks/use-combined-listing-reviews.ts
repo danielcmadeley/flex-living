@@ -31,6 +31,45 @@ export interface CombinedReview {
   channel?: string;
 }
 
+// Interface for Google Places API review data
+interface GoogleReviewResponse {
+  reviews: Array<{
+    id: string;
+    source: "google";
+    author: string;
+    authorPhoto?: string;
+    authorUrl?: string;
+    rating: number;
+    text: string;
+    createdAt: string;
+    relativeTime?: string;
+    language?: string;
+    originalLanguage?: string;
+    translated?: boolean;
+    propertyName: string;
+  }>;
+  averageRating: number;
+  totalReviews: number;
+}
+
+// Interface for individual Google review from API
+interface GoogleReviewItem {
+  id: string;
+  source: "google";
+  author: string;
+  authorPhoto?: string;
+  authorUrl?: string;
+  rating: number;
+  overallRating: number;
+  text: string;
+  createdAt: string;
+  relativeTime?: string;
+  language?: string;
+  originalLanguage?: string;
+  translated?: boolean;
+  propertyName: string;
+}
+
 export interface CombinedReviewsStats {
   overall: number;
   totalReviews: number;
@@ -127,32 +166,32 @@ export function useCombinedListingReviews(
       combinedReviews.push(...normalizedHostawayReviews);
 
       // Process Google reviews if enabled and available
-      let googleReviews: any[] = [];
+      let googleReviews: GoogleReviewItem[] = [];
       if (includeGoogleReviews && googleQuery.data) {
         googleReviews = googleQuery.data.reviews || [];
         const normalizedGoogleReviews: CombinedReview[] = googleReviews.map(
-          (review) => ({
+          (review: GoogleReviewItem) => ({
             id: review.id,
             source: "google" as const,
             author: review.author,
             authorPhoto: review.authorPhoto,
             authorUrl: review.authorUrl,
             rating: review.rating,
-            overallRating: review.overallRating,
+            overallRating: review.rating * 2, // Convert 5-star to 10-star scale
             text: review.text,
-            comment: review.comment,
+            comment: review.text, // Use text as comment for Google reviews
             createdAt: review.createdAt,
-            submittedAt: new Date(review.submittedAt),
+            submittedAt: new Date(review.createdAt),
             relativeTime: review.relativeTime,
-            language: review.language,
-            originalLanguage: review.originalLanguage,
-            translated: review.translated,
-            guestName: review.guestName,
-            listingName: review.propertyName,
-            propertyName: review.propertyName,
-            type: review.type,
-            status: review.status,
-            categories: review.categories,
+            language: review.language || "en",
+            originalLanguage: review.language || "en",
+            translated: false,
+            guestName: review.author,
+            listingName: propertyName,
+            propertyName: propertyName,
+            type: "guest-to-host" as const,
+            status: "published" as const,
+            categories: {},
           }),
         );
 
@@ -213,17 +252,22 @@ function getRelativeTime(date: Date): string {
 // Helper function to calculate combined statistics
 function calculateCombinedStats(
   hostawayReviews: CombinedReview[],
-  googleReviews: any[],
-  googleData?: any,
+  googleReviews: GoogleReviewItem[],
+  googleData?: GoogleReviewResponse,
 ): CombinedReviewsStats {
-  const allReviews = [...hostawayReviews, ...googleReviews];
-
-  // Calculate overall rating
-  const totalRating = allReviews.reduce(
+  // Calculate overall rating from both review types
+  const hostawayRatingSum = hostawayReviews.reduce(
     (sum, review) => sum + review.overallRating,
     0,
   );
-  const overall = allReviews.length > 0 ? totalRating / allReviews.length : 0;
+  const googleRatingSum = googleReviews.reduce(
+    (sum, review) => sum + review.rating * 2, // Convert 5-star to 10-star scale
+    0,
+  );
+
+  const totalReviews = hostawayReviews.length + googleReviews.length;
+  const overall =
+    totalReviews > 0 ? (hostawayRatingSum + googleRatingSum) / totalReviews : 0;
 
   // Calculate category averages (primarily from Hostaway reviews)
   const categoryTotals: Record<string, { sum: number; count: number }> = {};
@@ -246,9 +290,14 @@ function calculateCombinedStats(
 
   // Calculate review types
   const reviewTypes: Record<string, number> = {};
-  allReviews.forEach((review) => {
+  hostawayReviews.forEach((review) => {
     reviewTypes[review.type] = (reviewTypes[review.type] || 0) + 1;
   });
+  // Google reviews are always guest-to-host
+  if (googleReviews.length > 0) {
+    reviewTypes["guest-to-host"] =
+      (reviewTypes["guest-to-host"] || 0) + googleReviews.length;
+  }
 
   // Calculate source statistics
   const hostawayAverage =
@@ -263,7 +312,7 @@ function calculateCombinedStats(
 
   return {
     overall: Number(overall.toFixed(1)),
-    totalReviews: allReviews.length,
+    totalReviews: totalReviews,
     categories,
     reviewTypes,
     sources: {

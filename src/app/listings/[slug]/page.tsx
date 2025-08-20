@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import {
@@ -67,7 +68,7 @@ export default function ListingPage() {
 
   const availableLanguages = Array.from(
     new Set(reviews.map((review) => review.language).filter(Boolean)),
-  );
+  ) as string[];
 
   // Pagination
   const REVIEWS_PER_PAGE = 5;
@@ -353,9 +354,11 @@ export default function ListingPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-lg">{review.author}</h3>
                     {review.authorPhoto && (
-                      <img
+                      <Image
                         src={review.authorPhoto}
                         alt={review.author}
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded-full"
                       />
                     )}

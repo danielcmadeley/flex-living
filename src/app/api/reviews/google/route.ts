@@ -1,5 +1,19 @@
 import { NextResponse } from "next/server";
 
+// Interface for Google Places API review structure
+interface GoogleReview {
+  author_name: string;
+  author_url?: string;
+  language: string;
+  original_language?: string;
+  profile_photo_url?: string;
+  rating: number;
+  relative_time_description: string;
+  text: string;
+  time: number;
+  translated?: boolean;
+}
+
 // Property-specific Google Place IDs mapping
 const GOOGLE_PLACE_IDS: Record<string, string> = {
   // Test with British Museum (stable, well-known landmark)
@@ -191,7 +205,7 @@ export async function GET(request: Request) {
 
     // Transform reviews to match expected format
     const transformedReviews = (data.result.reviews || []).map(
-      (review: any, index: number) => ({
+      (review: GoogleReview, index: number) => ({
         id: `google_${review.time}_${placeId}_${index}`,
         source: "google",
         author: review.author_name,

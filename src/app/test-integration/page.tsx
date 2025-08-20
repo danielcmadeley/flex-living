@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useCombinedListingReviews } from "@/hooks/use-combined-listing-reviews";
 import { useListings } from "@/hooks/use-listings";
 import { useGoogleReviews } from "@/hooks/use-google-reviews";
-import { ReviewSourceBadge, ReviewSourceSummary } from "@/components/ui/review-source-badge";
+import {
+  ReviewSourceBadge,
+  ReviewSourceSummary,
+} from "@/components/ui/review-source-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  MapPin,
   Star,
   AlertCircle,
   CheckCircle,
@@ -20,7 +21,7 @@ import {
   Database,
   Globe,
   Eye,
-  Users
+  Users,
 } from "lucide-react";
 
 export default function TestIntegrationPage() {
@@ -62,34 +63,39 @@ export default function TestIntegrationPage() {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />,
       );
     }
 
     if (hasHalfStar) {
-      stars.push(
-        <Star key="half" className="h-4 w-4 text-yellow-400" />
-      );
+      stars.push(<Star key="half" className="h-4 w-4 text-yellow-400" />);
     }
 
     const emptyStars = 5 - Math.ceil(normalizedRating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />
-      );
+      stars.push(<Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />);
     }
 
     return stars;
   };
 
-  const getStatusIcon = (isLoading: boolean, isError: boolean, isSuccess: boolean) => {
-    if (isLoading) return <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />;
+  const getStatusIcon = (
+    isLoading: boolean,
+    isError: boolean,
+    isSuccess: boolean,
+  ) => {
+    if (isLoading)
+      return <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />;
     if (isError) return <AlertCircle className="h-5 w-5 text-red-600" />;
     if (isSuccess) return <CheckCircle className="h-5 w-5 text-green-600" />;
     return <AlertCircle className="h-5 w-5 text-gray-400" />;
   };
 
-  const getStatusText = (isLoading: boolean, isError: boolean, isSuccess: boolean) => {
+  const getStatusText = (
+    isLoading: boolean,
+    isError: boolean,
+    isSuccess: boolean,
+  ) => {
     if (isLoading) return "Loading...";
     if (isError) return "Error";
     if (isSuccess) return "Success";
@@ -106,7 +112,8 @@ export default function TestIntegrationPage() {
               Integration Test Dashboard
             </h1>
             <p className="text-gray-600">
-              Test all components of your Google Places + Hostaway reviews integration
+              Test all components of your Google Places + Hostaway reviews
+              integration
             </p>
           </div>
           <div className="flex gap-2">
@@ -131,11 +138,19 @@ export default function TestIntegrationPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              {getStatusIcon(listingsQuery.isLoading, listingsQuery.isError, listingsQuery.isSuccess)}
+              {getStatusIcon(
+                listingsQuery.isLoading,
+                listingsQuery.isError,
+                !listingsQuery.isLoading && !listingsQuery.isError,
+              )}
               <div>
                 <h3 className="font-medium">Hostaway API</h3>
                 <p className="text-sm text-gray-600">
-                  {getStatusText(listingsQuery.isLoading, listingsQuery.isError, listingsQuery.isSuccess)}
+                  {getStatusText(
+                    listingsQuery.isLoading,
+                    listingsQuery.isError,
+                    !listingsQuery.isLoading && !listingsQuery.isError,
+                  )}
                 </p>
               </div>
             </div>
@@ -145,11 +160,19 @@ export default function TestIntegrationPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              {getStatusIcon(googleQuery.isLoading, googleQuery.isError, googleQuery.isSuccess)}
+              {getStatusIcon(
+                googleQuery.isLoading,
+                googleQuery.isError,
+                googleQuery.isSuccess,
+              )}
               <div>
                 <h3 className="font-medium">Google Places</h3>
                 <p className="text-sm text-gray-600">
-                  {getStatusText(googleQuery.isLoading, googleQuery.isError, googleQuery.isSuccess)}
+                  {getStatusText(
+                    googleQuery.isLoading,
+                    googleQuery.isError,
+                    googleQuery.isSuccess,
+                  )}
                 </p>
               </div>
             </div>
@@ -167,7 +190,9 @@ export default function TestIntegrationPage() {
               <div>
                 <h3 className="font-medium">API Configuration</h3>
                 <p className="text-sm text-gray-600">
-                  {!!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? "Configured" : "Missing"}
+                  {!!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+                    ? "Configured"
+                    : "Missing"}
                 </p>
               </div>
             </div>
@@ -245,11 +270,13 @@ export default function TestIntegrationPage() {
             Hostaway Integration
             <Button
               onClick={() => listingsQuery.refetch()}
-              disabled={listingsQuery.isFetching}
+              disabled={listingsQuery.isLoading}
               size="sm"
               variant="outline"
             >
-              <RefreshCw className={`h-4 w-4 ${listingsQuery.isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${listingsQuery.isLoading ? "animate-spin" : ""}`}
+              />
               Test
             </Button>
           </CardTitle>
@@ -266,7 +293,9 @@ export default function TestIntegrationPage() {
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-5 w-5 text-red-600" />
-                <h3 className="font-medium text-red-800">Hostaway Integration Error</h3>
+                <h3 className="font-medium text-red-800">
+                  Hostaway Integration Error
+                </h3>
               </div>
               <p className="text-sm text-red-700">
                 {listingsQuery.error instanceof Error
@@ -276,11 +305,13 @@ export default function TestIntegrationPage() {
             </div>
           )}
 
-          {listingsQuery.isSuccess && (
+          {!listingsQuery.isLoading && !listingsQuery.isError && (
             <div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-green-900">Properties Found</h3>
+                  <h3 className="font-medium text-green-900">
+                    Properties Found
+                  </h3>
                   <p className="text-2xl font-bold text-green-600">
                     {listingsQuery.listings.length}
                   </p>
@@ -294,7 +325,10 @@ export default function TestIntegrationPage() {
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="font-medium text-purple-900">Avg Rating</h3>
                   <p className="text-2xl font-bold text-purple-600">
-                    {listingsQuery.statistics?.overall ? (listingsQuery.statistics.overall / 2).toFixed(1) : 'N/A'}/5
+                    {listingsQuery.statistics?.overall
+                      ? (listingsQuery.statistics.overall / 2).toFixed(1)
+                      : "N/A"}
+                    /5
                   </p>
                 </div>
               </div>
@@ -303,14 +337,23 @@ export default function TestIntegrationPage() {
                 <h4 className="font-medium">Available Properties:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {listingsQuery.listings.slice(0, 6).map((listing) => (
-                    <div key={listing.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span className="text-sm font-medium">{listing.name}</span>
-                      <Badge variant="secondary">{listing.reviewCount} reviews</Badge>
+                    <div
+                      key={listing.name}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                    >
+                      <span className="text-sm font-medium">
+                        {listing.name}
+                      </span>
+                      <Badge variant="secondary">
+                        {listing.reviewCount} reviews
+                      </Badge>
                     </div>
                   ))}
                 </div>
                 {listingsQuery.listings.length > 6 && (
-                  <p className="text-sm text-gray-600">...and {listingsQuery.listings.length - 6} more</p>
+                  <p className="text-sm text-gray-600">
+                    ...and {listingsQuery.listings.length - 6} more
+                  </p>
                 )}
               </div>
             </div>
@@ -326,11 +369,13 @@ export default function TestIntegrationPage() {
             Google Places Integration
             <Button
               onClick={() => googleQuery.refetch()}
-              disabled={googleQuery.isFetching}
+              disabled={googleQuery.isLoading}
               size="sm"
               variant="outline"
             >
-              <RefreshCw className={`h-4 w-4 ${googleQuery.isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${googleQuery.isLoading ? "animate-spin" : ""}`}
+              />
               Test
             </Button>
           </CardTitle>
@@ -339,7 +384,9 @@ export default function TestIntegrationPage() {
           {googleQuery.isLoading && (
             <div className="text-center py-8">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-              <p className="text-gray-600">Testing Google Places connection...</p>
+              <p className="text-gray-600">
+                Testing Google Places connection...
+              </p>
             </div>
           )}
 
@@ -347,7 +394,9 @@ export default function TestIntegrationPage() {
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-5 w-5 text-red-600" />
-                <h3 className="font-medium text-red-800">Google Places Integration Error</h3>
+                <h3 className="font-medium text-red-800">
+                  Google Places Integration Error
+                </h3>
               </div>
               <p className="text-sm text-red-700">
                 {googleQuery.error instanceof Error
@@ -378,7 +427,9 @@ export default function TestIntegrationPage() {
                   </div>
                 </div>
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h3 className="font-medium text-yellow-900">Total on Google</h3>
+                  <h3 className="font-medium text-yellow-900">
+                    Total on Google
+                  </h3>
                   <p className="text-2xl font-bold text-yellow-600">
                     {googleQuery.data.totalReviews}
                   </p>
@@ -391,7 +442,9 @@ export default function TestIntegrationPage() {
                   <div key={review.id} className="border rounded-lg p-3">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{review.author}</span>
+                        <span className="font-medium text-sm">
+                          {review.author}
+                        </span>
                         <ReviewSourceBadge source="google" />
                       </div>
                       <div className="flex items-center gap-1">
@@ -400,7 +453,7 @@ export default function TestIntegrationPage() {
                       </div>
                     </div>
                     <p className="text-sm text-gray-700">
-                      "{review.text.substring(0, 120)}..."
+                      &ldquo;{review.text.substring(0, 120)}...&rdquo;
                     </p>
                   </div>
                 ))}
@@ -432,7 +485,10 @@ export default function TestIntegrationPage() {
                 </option>
               ))}
             </select>
-            <Button onClick={handleTestProperty} disabled={!selectedProperty.trim()}>
+            <Button
+              onClick={handleTestProperty}
+              disabled={!selectedProperty.trim()}
+            >
               Test Combined
             </Button>
           </div>
@@ -454,7 +510,9 @@ export default function TestIntegrationPage() {
                 <div className="bg-red-50 border border-red-200 rounded-md p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertCircle className="h-5 w-5 text-red-600" />
-                    <h3 className="font-medium text-red-800">Combined Reviews Error</h3>
+                    <h3 className="font-medium text-red-800">
+                      Combined Reviews Error
+                    </h3>
                   </div>
                   <p className="text-sm text-red-700">
                     {combinedQuery.error instanceof Error
@@ -468,25 +526,33 @@ export default function TestIntegrationPage() {
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-gray-900">Total Reviews</h3>
+                      <h3 className="font-medium text-gray-900">
+                        Total Reviews
+                      </h3>
                       <p className="text-2xl font-bold text-gray-600">
                         {combinedQuery.data.totalCount}
                       </p>
                     </div>
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-blue-900">Google Reviews</h3>
+                      <h3 className="font-medium text-blue-900">
+                        Google Reviews
+                      </h3>
                       <p className="text-2xl font-bold text-blue-600">
                         {combinedQuery.data.stats.sources.google.count}
                       </p>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-green-900">Verified Reviews</h3>
+                      <h3 className="font-medium text-green-900">
+                        Verified Reviews
+                      </h3>
                       <p className="text-2xl font-bold text-green-600">
                         {combinedQuery.data.stats.sources.hostaway.count}
                       </p>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
-                      <h3 className="font-medium text-purple-900">Combined Rating</h3>
+                      <h3 className="font-medium text-purple-900">
+                        Combined Rating
+                      </h3>
                       <div className="flex items-center gap-2">
                         <p className="text-2xl font-bold text-purple-600">
                           {(combinedQuery.data.stats.overall / 2).toFixed(1)}/5
@@ -498,7 +564,10 @@ export default function TestIntegrationPage() {
                     </div>
                   </div>
 
-                  <ReviewSourceSummary sources={combinedQuery.data.stats.sources} className="mb-4" />
+                  <ReviewSourceSummary
+                    sources={combinedQuery.data.stats.sources}
+                    className="mb-4"
+                  />
 
                   <div className="space-y-3">
                     <h4 className="font-medium">Sample Combined Reviews:</h4>
@@ -506,14 +575,23 @@ export default function TestIntegrationPage() {
                       <div key={review.id} className="border rounded-lg p-3">
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{review.author}</span>
-                            <ReviewSourceBadge source={review.source} type={review.type} />
+                            <span className="font-medium text-sm">
+                              {review.author}
+                            </span>
+                            <ReviewSourceBadge
+                              source={review.source}
+                              type={review.type}
+                            />
                             <Badge variant="outline" className="text-xs">
-                              {review.relativeTime || formatDate(review.submittedAt)}
+                              {review.relativeTime ||
+                                formatDate(review.submittedAt)}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-1">
-                            {renderStars(review.overallRating, review.source === "google" ? "5" : "10")}
+                            {renderStars(
+                              review.overallRating,
+                              review.source === "google" ? "5" : "10",
+                            )}
                             <span className="text-sm ml-1">
                               {review.source === "google"
                                 ? `${review.rating}/5`
@@ -522,7 +600,7 @@ export default function TestIntegrationPage() {
                           </div>
                         </div>
                         <p className="text-sm text-gray-700">
-                          "{review.comment.substring(0, 150)}..."
+                          &ldquo;{review.comment.substring(0, 150)}...&rdquo;
                         </p>
                       </div>
                     ))}
@@ -531,11 +609,14 @@ export default function TestIntegrationPage() {
                   <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <h3 className="font-medium text-green-800">Integration Test Successful!</h3>
+                      <h3 className="font-medium text-green-800">
+                        Integration Test Successful!
+                      </h3>
                     </div>
                     <p className="text-sm text-green-700">
-                      Combined reviews are working correctly. Both Google and Hostaway reviews are being
-                      fetched, combined, and displayed properly.
+                      Combined reviews are working correctly. Both Google and
+                      Hostaway reviews are being fetched, combined, and
+                      displayed properly.
                     </p>
                   </div>
                 </div>
@@ -576,8 +657,18 @@ export default function TestIntegrationPage() {
             <div>
               <h3 className="font-medium mb-2">📚 Documentation</h3>
               <ul className="text-sm text-gray-600 space-y-1 ml-4">
-                <li>• <Link href="/test-google-reviews" className="text-blue-600 hover:underline">Google Places API Test</Link></li>
-                <li>• See GOOGLE_PLACES_SETUP.md for detailed setup instructions</li>
+                <li>
+                  •{" "}
+                  <Link
+                    href="/test-google-reviews"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Google Places API Test
+                  </Link>
+                </li>
+                <li>
+                  • See GOOGLE_PLACES_SETUP.md for detailed setup instructions
+                </li>
                 <li>• Monitor API usage in Google Cloud Console</li>
               </ul>
             </div>
