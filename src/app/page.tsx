@@ -96,7 +96,7 @@ export default function HomePage() {
           Welcome to Flex Living
         </h1>
         <p className="text-xl text-gray-600 mb-2">
-          Premium accommodations across London's finest locations
+          Premium accommodations across London&apos;s finest locations
         </p>
         <p className="text-gray-500">
           Discover exceptional stays with outstanding guest reviews

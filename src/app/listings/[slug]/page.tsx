@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-import { NormalizedReview } from "@/lib/types/hostaway";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import {
   Pagination,
@@ -22,21 +21,8 @@ import {
   useListingFilters,
   type FilterOptions,
 } from "@/components/ListingFilters";
-import { slugToListingName, findBestMatchingListing } from "@/lib/utils/slugs";
+import { slugToListingName } from "@/lib/utils/slugs";
 import { useListingByName } from "@/hooks/use-listings";
-
-interface ReviewsResponse {
-  status: "success" | "error";
-  data: NormalizedReview[];
-  total: number;
-  message?: string;
-  statistics?: {
-    overall: number;
-    categories: Record<string, number>;
-    totalReviews: number;
-    reviewTypes: Record<string, number>;
-  };
-}
 
 export default function ListingPage() {
   const params = useParams();
