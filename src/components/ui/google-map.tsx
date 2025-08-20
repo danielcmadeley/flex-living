@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapPin, ExternalLink, AlertCircle } from "lucide-react";
+import { getPropertyLocation } from "@/lib/utils/locations";
 
 interface GoogleMapProps {
   placeId?: string;
@@ -49,39 +50,56 @@ export function GoogleMap({
   // Load Google Maps API
   useEffect(() => {
     if (!apiKey) {
+      console.warn(
+        "Google Maps API key is not configured. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.",
+      );
       setError("Google Maps API key is not configured");
       return;
     }
 
-    if (window.google && window.google.maps) {
+    // Check if script already exists
+    const existingScript = document.querySelector(
+      'script[src*="maps.googleapis.com"]',
+    );
+
+    if (window.google && window.google.maps && window.google.maps.Map) {
       setIsLoaded(true);
       return;
     }
 
-    // Create callback function
-    window.initGoogleMaps = () => {
+    if (existingScript) {
+      // Script exists but maps not loaded yet, wait for it
+      existingScript.addEventListener("load", () => {
+        setIsLoaded(true);
+      });
+      return;
+    }
+
+    // Create callback function with unique name
+    const callbackName = `initGoogleMaps_${Date.now()}`;
+    (window as any)[callbackName] = () => {
       setIsLoaded(true);
+      delete (window as any)[callbackName];
     };
 
     // Load the script
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
-    script.onerror = () => setError("Failed to load Google Maps");
+    script.onerror = () => {
+      setError(
+        "Failed to load Google Maps. Please check your API key and ensure Maps JavaScript API is enabled.",
+      );
+      delete (window as any)[callbackName];
+    };
 
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup
-      const existingScript = document.querySelector(
-        `script[src*="maps.googleapis.com"]`,
-      );
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-      if (window.initGoogleMaps) {
-        delete window.initGoogleMaps;
+      // Don't remove script on cleanup as other components might be using it
+      if ((window as any)[callbackName]) {
+        delete (window as any)[callbackName];
       }
     };
   }, [apiKey]);
@@ -168,7 +186,9 @@ export function GoogleMap({
         }
       } catch (err) {
         console.error("Error initializing map:", err);
-        setError("Failed to initialize map");
+        setError(
+          err instanceof Error ? err.message : "Failed to initialize map",
+        );
       }
     };
 
@@ -239,14 +259,33 @@ export function GoogleMap({
   if (!apiKey) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex flex-col items-center justify-center bg-gray-50 border border-gray-200 rounded-lg ${className}`}
         style={{ height }}
       >
-        <div className="text-center p-6">
-          <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">
-            Google Maps API key not configured
+        <div className="text-center p-6 max-w-md">
+          <MapPin className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Map Configuration Required
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Google Maps API key is missing. Please configure
+            NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in your environment variables.
           </p>
+          {(address || propertyName) && (
+            <div className="bg-white p-3 rounded-md border border-gray-200">
+              <MapPin className="h-4 w-4 text-gray-500 inline-block mr-2" />
+              <span className="text-sm text-gray-700">
+                {propertyName || address}
+              </span>
+            </div>
+          )}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mt-4 p-3 bg-amber-50 rounded-md">
+              <p className="text-xs text-amber-800">
+                Developer: Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your .env file
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -255,12 +294,23 @@ export function GoogleMap({
   if (error) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}
+        className={`flex flex-col items-center justify-center bg-red-50 border border-red-200 rounded-lg ${className}`}
         style={{ height }}
       >
-        <div className="text-center p-6">
-          <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-2" />
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="text-center p-6 max-w-md">
+          <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Unable to Load Map
+          </h3>
+          <p className="text-sm text-gray-600 mb-2">{error}</p>
+          {(address || propertyName) && (
+            <div className="mt-4 bg-white p-3 rounded-md border border-gray-200">
+              <MapPin className="h-4 w-4 text-gray-500 inline-block mr-2" />
+              <span className="text-sm text-gray-700">
+                {propertyName || address}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -269,12 +319,17 @@ export function GoogleMap({
   if (!isLoaded) {
     return (
       <div
-        className={`flex items-center justify-center bg-gray-100 rounded-lg animate-pulse ${className}`}
+        className={`flex flex-col items-center justify-center bg-gray-50 rounded-lg animate-pulse ${className}`}
         style={{ height }}
       >
         <div className="text-center p-6">
-          <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Loading map...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-500 mx-auto mb-3"></div>
+          <p className="text-sm text-gray-600 font-medium">Loading map...</p>
+          {(address || propertyName) && (
+            <p className="text-xs text-gray-500 mt-2">
+              {propertyName || address}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -320,46 +375,58 @@ export function PropertyMap({
   propertyName,
   ...props
 }: Omit<GoogleMapProps, "placeId"> & { propertyName: string }) {
-  const [placeId, setPlaceId] = useState<string | null>(null);
+  // Import this at the top of the file: import { getPropertyLocation } from "@/lib/utils/locations";
+  const location = getPropertyLocation(propertyName);
 
-  useEffect(() => {
-    // Get place ID for the property
-    const getPlaceId = async () => {
-      try {
-        const response = await fetch(
-          `/api/reviews/google?propertyName=${encodeURIComponent(propertyName)}`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-          if (data.placeId) {
-            setPlaceId(data.placeId);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to get place ID for property:", error);
-      }
-    };
+  // Fallback Place ID for demo/testing purposes (London, UK)
+  const FALLBACK_PLACE_ID = "ChIJdd4hrwug2EcRmSrV3Vo6llI";
 
-    if (propertyName) {
-      getPlaceId();
+  // If we have a location from the database, use it
+  if (location) {
+    // Use coordinates if available, otherwise use placeId, otherwise use address
+    if (location.lat && location.lng) {
+      return (
+        <GoogleMap
+          lat={location.lat}
+          lng={location.lng}
+          address={location.address}
+          propertyName={propertyName}
+          {...props}
+        />
+      );
     }
-  }, [propertyName]);
 
-  if (!placeId) {
-    return (
-      <div
-        className="flex items-center justify-center bg-gray-100 rounded-lg"
-        style={{ height: props.height || "400px" }}
-      >
-        <div className="text-center p-6">
-          <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Loading location...</p>
-        </div>
-      </div>
-    );
+    if (location.placeId) {
+      return (
+        <GoogleMap
+          placeId={location.placeId}
+          address={location.address}
+          propertyName={propertyName}
+          {...props}
+        />
+      );
+    }
+
+    if (location.address) {
+      return (
+        <GoogleMap
+          address={location.address}
+          propertyName={propertyName}
+          {...props}
+        />
+      );
+    }
   }
 
-  return <GoogleMap placeId={placeId} propertyName={propertyName} {...props} />;
+  // Fallback: Use the fixed Place ID for any property not in the database
+  return (
+    <GoogleMap
+      placeId={FALLBACK_PLACE_ID}
+      address="London, UK"
+      propertyName={propertyName}
+      {...props}
+    />
+  );
 }
 
 // Multi-property overview map
@@ -395,35 +462,47 @@ export function MultiPropertyMap({
       return;
     }
 
-    if (window.google && window.google.maps) {
+    // Check if script already exists
+    const existingScript = document.querySelector(
+      'script[src*="maps.googleapis.com"]',
+    );
+
+    if (window.google && window.google.maps && window.google.maps.Map) {
       setIsLoaded(true);
       return;
     }
 
-    // Create callback function
-    window.initGoogleMaps = () => {
+    if (existingScript) {
+      // Script exists but maps not loaded yet, wait for it
+      existingScript.addEventListener("load", () => {
+        setIsLoaded(true);
+      });
+      return;
+    }
+
+    // Create callback function with unique name
+    const callbackName = `initMultiMap_${Date.now()}`;
+    (window as any)[callbackName] = () => {
       setIsLoaded(true);
+      delete (window as any)[callbackName];
     };
 
     // Load the script
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
     script.async = true;
     script.defer = true;
-    script.onerror = () => setError("Failed to load Google Maps");
+    script.onerror = () => {
+      setError("Failed to load Google Maps. Please check your API key.");
+      delete (window as any)[callbackName];
+    };
 
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup
-      const existingScript = document.querySelector(
-        `script[src*="maps.googleapis.com"]`,
-      );
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-      if (window.initGoogleMaps) {
-        delete window.initGoogleMaps;
+      // Don't remove script on cleanup as other components might be using it
+      if ((window as any)[callbackName]) {
+        delete (window as any)[callbackName];
       }
     };
   }, [apiKey]);

@@ -52,7 +52,7 @@ export default function ListingPage() {
     isError,
     error,
   } = useCombinedListingReviews({
-    listingName: decodedSlug,
+    listingName: slugToListingName(decodedSlug),
     includeGoogleReviews: true,
     enabled: !!decodedSlug,
   });
@@ -413,20 +413,23 @@ export default function ListingPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-semibold text-lg">{review.author}</h3>
-                    {review.authorPhoto && (
-                      <Image
+                    {review.authorPhoto ? (
+                      <img
                         src={review.authorPhoto}
                         alt={review.author}
                         width={32}
                         height={32}
-                        className="w-8 h-8 rounded-full"
+                        className="w-8 h-8 rounded-full object-cover"
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=3B82F6&color=fff&size=32`;
                         }}
-                        unoptimized={review.authorPhoto.includes(
-                          "googleusercontent.com",
-                        )}
                       />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
+                        {review.author.charAt(0).toUpperCase()}
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mb-2">
