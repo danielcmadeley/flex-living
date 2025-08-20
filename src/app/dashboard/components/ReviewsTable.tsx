@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -21,10 +22,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Star, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
+import {
+  Star,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Download,
+  Trash2,
+  Check,
+  X,
+} from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
 import { ReviewStatusSelect } from "./ReviewStatusSelect";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  useBulkActions,
+  useBulkActionMethods,
+  useComputedValues,
+  useUIActions,
+} from "@/stores/dashboard-store";
+import { BulkActionsBar } from "@/components/BulkActionsBar";
 
 interface ReviewsTableProps {
   reviews: NormalizedReview[];
@@ -42,6 +59,67 @@ export function ReviewsTable({
 }: ReviewsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const queryClient = useQueryClient();
+
+  // Bulk actions from Zustand store
+  const bulkActions = useBulkActions();
+  const {
+    toggleReviewSelection,
+    selectAllReviews,
+    clearSelection,
+    setBulkAction,
+    setPerformingBulkAction,
+  } = useBulkActionMethods();
+  const { selectedCount, isReviewSelected } = useComputedValues();
+  const { showToast } = useUIActions();
+
+  // Bulk action handlers
+  const handleBulkStatusChange = async (
+    newStatus: "published" | "pending" | "draft",
+  ) => {
+    const selectedIds = Array.from(bulkActions.selectedReviews);
+    if (selectedIds.length === 0) return;
+
+    setPerformingBulkAction(true);
+    setBulkAction(
+      newStatus === "published"
+        ? "publish"
+        : newStatus === "pending"
+          ? "unpublish"
+          : "delete",
+    );
+
+    try {
+      // Update each selected review
+      const promises = selectedIds.map((id) =>
+        fetch(`/api/reviews/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        }),
+      );
+
+      await Promise.all(promises);
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+
+      showToast(
+        `Updated ${selectedIds.length} reviews to ${newStatus}`,
+        "success",
+      );
+      clearSelection();
+    } catch (error) {
+      showToast("Failed to update reviews", "error");
+    } finally {
+      setPerformingBulkAction(false);
+      setBulkAction(undefined);
+    }
+  };
+
+  const handleSelectAll = () => {
+    const reviewIds = reviews.map((review) => review.id);
+    selectAllReviews(reviewIds);
+  };
 
   const exportToCSV = () => {
     const headers = [
@@ -93,6 +171,29 @@ export function ReviewsTable({
 
   const columns: ColumnDef<NormalizedReview>[] = useMemo(
     () => [
+      // Selection column
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={bulkActions.isSelectAllMode}
+            onCheckedChange={handleSelectAll}
+            aria-label="Select all"
+            className="translate-y-[2px]"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={isReviewSelected(row.original.id)}
+            onCheckedChange={() => toggleReviewSelection(row.original.id)}
+            aria-label={`Select review ${row.original.id}`}
+            className="translate-y-[2px]"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+      },
       {
         accessorKey: "guestName",
         header: ({ column }) => {
@@ -304,6 +405,15 @@ export function ReviewsTable({
             </Badge>
           </div>
         </CardTitle>
+
+        {/* Bulk Actions Bar */}
+        <BulkActionsBar
+          selectedCount={selectedCount()}
+          isPerformingAction={bulkActions.isPerformingBulkAction}
+          onClearSelection={clearSelection}
+          onBulkStatusChange={handleBulkStatusChange}
+          className="mt-4"
+        />
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -334,7 +444,12 @@ export function ReviewsTable({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        className={
+                          isReviewSelected(row.original.id) ? "bg-blue-50" : ""
+                        }
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,47 +13,32 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Filter, X, Search } from "lucide-react";
 import { ReviewType, ReviewStatus } from "@/lib/schemas";
+import {
+  useFilters,
+  useFilterActions,
+  useComputedValues,
+} from "@/stores/dashboard-store";
 
 interface DashboardFiltersProps {
-  onFiltersChange: (filters: FilterState) => void;
   properties: string[];
-  isLoading?: boolean;
 }
 
-export interface FilterState {
-  type?: ReviewType;
-  status?: ReviewStatus;
-  listingName?: string;
-  searchTerm?: string;
-  sortOrder: "asc" | "desc";
-  minRating?: number;
-  maxRating?: number;
-}
-
-export function DashboardFilters({
-  onFiltersChange,
-  properties,
-  isLoading,
-}: DashboardFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    sortOrder: "desc",
-  });
-
-  const updateFilters = (newFilters: Partial<FilterState>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    onFiltersChange(updatedFilters);
-  };
+export function DashboardFilters({ properties }: DashboardFiltersProps) {
+  const filters = useFilters();
+  const {
+    setSearchTerm,
+    setStatus,
+    setListingName,
+    setRatingRange,
+    setSortOrder,
+    resetFilters,
+    setFilters,
+  } = useFilterActions();
+  const { hasActiveFilters } = useComputedValues();
 
   const clearFilters = () => {
-    const defaultFilters: FilterState = { sortOrder: "desc" };
-    setFilters(defaultFilters);
-    onFiltersChange(defaultFilters);
+    resetFilters();
   };
-
-  const hasActiveFilters = Object.keys(filters).some(
-    (key) => key !== "sortOrder" && filters[key as keyof FilterState],
-  );
 
   return (
     <Card>
@@ -63,7 +47,7 @@ export function DashboardFilters({
           <Filter className="h-5 w-5" />
           Filters & Search
         </CardTitle>
-        {hasActiveFilters && (
+        {hasActiveFilters() && (
           <Button
             variant="outline"
             size="sm"
@@ -80,11 +64,9 @@ export function DashboardFilters({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search reviews by guest name or comment..."
+            placeholder="Search reviews..."
             value={filters.searchTerm || ""}
-            onChange={(e) =>
-              updateFilters({ searchTerm: e.target.value || undefined })
-            }
+            onChange={(e) => setSearchTerm(e.target.value || "")}
             className="pl-10"
           />
         </div>
@@ -95,19 +77,16 @@ export function DashboardFilters({
           <div>
             <label className="text-sm font-medium mb-2 block">Property</label>
             <Select
-              value={filters.listingName || "__all__"}
+              value={filters.listingName || "all"}
               onValueChange={(value) =>
-                updateFilters({
-                  listingName: value === "__all__" ? undefined : value,
-                })
+                setListingName(value === "all" ? undefined : value)
               }
-              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All Properties</SelectItem>
+                <SelectItem value="all">All Properties</SelectItem>
                 {properties.map((property) => (
                   <SelectItem key={property} value={property}>
                     {property}
@@ -123,19 +102,18 @@ export function DashboardFilters({
               Review Type
             </label>
             <Select
-              value={filters.type || "__all__"}
+              value={filters.type || "all"}
               onValueChange={(value) =>
-                updateFilters({
-                  type: value === "__all__" ? undefined : (value as ReviewType),
+                setFilters({
+                  type: value === "all" ? undefined : (value as ReviewType),
                 })
               }
-              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="host-to-guest">Host → Guest</SelectItem>
                 <SelectItem value="guest-to-host">Guest → Host</SelectItem>
               </SelectContent>
@@ -146,20 +124,16 @@ export function DashboardFilters({
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
             <Select
-              value={filters.status || "__all__"}
+              value={filters.status || "all"}
               onValueChange={(value) =>
-                updateFilters({
-                  status:
-                    value === "__all__" ? undefined : (value as ReviewStatus),
-                })
+                setStatus(value === "all" ? undefined : (value as ReviewStatus))
               }
-              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
@@ -172,10 +146,7 @@ export function DashboardFilters({
             <label className="text-sm font-medium mb-2 block">Sort Order</label>
             <Select
               value={filters.sortOrder}
-              onValueChange={(value) =>
-                updateFilters({ sortOrder: value as "asc" | "desc" })
-              }
-              disabled={isLoading}
+              onValueChange={(value) => setSortOrder(value as "asc" | "desc")}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -200,11 +171,10 @@ export function DashboardFilters({
                 placeholder="Min (1-10)"
                 value={filters.minRating || ""}
                 onChange={(e) =>
-                  updateFilters({
-                    minRating: e.target.value
-                      ? parseInt(e.target.value)
-                      : undefined,
-                  })
+                  setRatingRange(
+                    e.target.value ? parseInt(e.target.value) : undefined,
+                    filters.maxRating,
+                  )
                 }
               />
             </div>
@@ -216,11 +186,10 @@ export function DashboardFilters({
                 placeholder="Max (1-10)"
                 value={filters.maxRating || ""}
                 onChange={(e) =>
-                  updateFilters({
-                    maxRating: e.target.value
-                      ? parseInt(e.target.value)
-                      : undefined,
-                  })
+                  setRatingRange(
+                    filters.minRating,
+                    e.target.value ? parseInt(e.target.value) : undefined,
+                  )
                 }
               />
             </div>
@@ -228,7 +197,7 @@ export function DashboardFilters({
         </div>
 
         {/* Active Filters Display */}
-        {hasActiveFilters && (
+        {hasActiveFilters() && (
           <div className="flex flex-wrap gap-2 pt-2 border-t">
             {filters.type && (
               <Badge variant="secondary" className="flex items-center gap-1">
@@ -238,7 +207,7 @@ export function DashboardFilters({
                   : "Guest → Host"}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => updateFilters({ type: undefined })}
+                  onClick={() => setFilters({ type: undefined })}
                 />
               </Badge>
             )}
@@ -247,7 +216,7 @@ export function DashboardFilters({
                 Status: {filters.status}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => updateFilters({ status: undefined })}
+                  onClick={() => setStatus(undefined)}
                 />
               </Badge>
             )}
@@ -256,7 +225,7 @@ export function DashboardFilters({
                 Property: {filters.listingName}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => updateFilters({ listingName: undefined })}
+                  onClick={() => setListingName(undefined)}
                 />
               </Badge>
             )}
@@ -265,7 +234,7 @@ export function DashboardFilters({
                 Search: &ldquo;{filters.searchTerm}&rdquo;
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() => updateFilters({ searchTerm: undefined })}
+                  onClick={() => setSearchTerm(undefined)}
                 />
               </Badge>
             )}
@@ -274,12 +243,7 @@ export function DashboardFilters({
                 Rating: {filters.minRating || 1}-{filters.maxRating || 10}
                 <X
                   className="h-3 w-3 cursor-pointer"
-                  onClick={() =>
-                    updateFilters({
-                      minRating: undefined,
-                      maxRating: undefined,
-                    })
-                  }
+                  onClick={() => setRatingRange(undefined, undefined)}
                 />
               </Badge>
             )}

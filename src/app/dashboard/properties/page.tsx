@@ -1,8 +1,22 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import DashboardContent from "../components/DashboardContent";
+import { PropertiesPage } from "../pages/PropertiesPage";
+import { DashboardSidebar } from "../components/DashboardSidebar";
+import type { User } from "@supabase/supabase-js";
 
-const PropertiesPage = async () => {
+interface PropertiesPageWrapperProps {
+  user: User;
+}
+
+function PropertiesPageWrapper({ user }: PropertiesPageWrapperProps) {
+  return (
+    <DashboardSidebar user={user} reviews={[]}>
+      <PropertiesPage />
+    </DashboardSidebar>
+  );
+}
+
+const PropertiesPageRoute = async () => {
   const supabase = await createClient();
 
   const {
@@ -13,7 +27,7 @@ const PropertiesPage = async () => {
     redirect("/login");
   }
 
-  return <DashboardContent user={user} />;
+  return <PropertiesPageWrapper user={user} />;
 };
 
-export default PropertiesPage;
+export default PropertiesPageRoute;
