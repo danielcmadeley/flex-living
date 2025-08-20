@@ -167,13 +167,13 @@ class HostawayService {
     return response.json() as Promise<HostawayReviewsResponse>;
   }
 
-  async getReviews(_params?: {
+  async getReviews(/* _params?: {
     listingId?: number;
     type?: string;
     status?: string;
     limit?: number;
     offset?: number;
-  }): Promise<HostawayReviewsResponse> {
+  } */): Promise<HostawayReviewsResponse> {
     // Since the API is sandboxed with no reviews, we'll return mock data
     // The params are prepared for when connecting to the real Hostaway API:
     // const queryParams = new URLSearchParams();

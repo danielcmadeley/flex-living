@@ -213,9 +213,12 @@ export function validateSeedData(jsonData: string): {
 /**
  * Export database data (placeholder - would need actual implementation)
  */
-export async function exportDatabaseData(
-  _format: "json" | "csv",
-): Promise<{ success: boolean; data?: string; error?: string }> {
+export async function exportDatabaseData(): Promise<{
+// _format?: "json" | "csv" // Reserved for future use
+  success: boolean;
+  data?: string;
+  error?: string;
+}> {
   // This would need to be implemented with an actual export API endpoint
   return {
     success: false,

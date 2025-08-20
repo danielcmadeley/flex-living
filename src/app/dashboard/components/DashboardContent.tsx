@@ -10,12 +10,12 @@ import { PropertiesPage } from "../pages/PropertiesPage";
 import { SeedPage } from "../pages/SeedPage";
 import { DashboardFilters, FilterState } from "./DashboardFilters";
 import { ReviewsTable } from "./ReviewsTable";
-import { AdvancedAnalytics } from "./AdvancedAnalytics";
 import { SearchAnalytics } from "@/components/SearchAnalytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMemo } from "react";
+import { NormalizedReview } from "@/lib/schemas";
 import {
   Grid,
   List,
@@ -23,7 +23,6 @@ import {
   MessageSquare,
   Calendar,
   ChevronRight,
-  Building,
 } from "lucide-react";
 
 interface DashboardContentProps {
@@ -197,7 +196,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
             ) : (
               <ReviewsGridView
                 reviews={filteredReviews}
-                onStatusChange={handleStatusChange}
                 isLoading={isLoading}
               />
             )}
@@ -331,7 +329,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     reviews,
     isLoading,
   }: {
-    reviews: any[];
+    reviews: NormalizedReview[];
     isLoading: boolean;
   }) {
     const propertiesData = useMemo(() => {
@@ -339,7 +337,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
         string,
         {
           name: string;
-          reviews: any[];
+          reviews: NormalizedReview[];
           averageRating: number;
           totalReviews: number;
           recentReviews: number;
@@ -514,14 +512,9 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   // Reviews Grid View Component
   function ReviewsGridView({
     reviews,
-    onStatusChange,
     isLoading,
   }: {
-    reviews: any[];
-    onStatusChange: (
-      reviewId: number,
-      newStatus: "published" | "pending" | "draft",
-    ) => void;
+    reviews: NormalizedReview[];
     isLoading: boolean;
   }) {
     if (isLoading) {
