@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,14 @@ import {
   Info,
   FileText,
 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  validateSeedData,
+  getDatabaseStatus,
+  performSeedOperation,
+  type DatabaseStatus,
+} from "@/lib/database-utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SeedProgress {
   total: number;
@@ -35,135 +43,136 @@ interface SeedProgress {
   errors: string[];
 }
 
-interface SeedResult {
-  success: boolean;
-  message: string;
-  data?: {
-    properties: number;
-    reviews: number;
-    guests: number;
-  };
-}
-
 export function SeedPage() {
-  const [isSeeding, setIsSeeding] = useState(false);
+  const queryClient = useQueryClient();
   const [seedProgress, setSeedProgress] = useState<SeedProgress | null>(null);
-  const [seedResult, setSeedResult] = useState<SeedResult | null>(null);
   const [customData, setCustomData] = useState("");
   const [seedType, setSeedType] = useState<"sample" | "custom" | "file">(
     "sample",
   );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastResult, setLastResult] = useState<{
+    success: boolean;
+    message: string;
+    count?: number;
+  } | null>(null);
 
-  const sampleDataSets = [
-    {
-      id: "basic",
-      name: "Basic Sample Data",
-      description: "10 properties with 50 reviews each",
-      estimatedRecords: 500,
-    },
-    {
-      id: "comprehensive",
-      name: "Comprehensive Dataset",
-      description: "25 properties with varied review patterns",
-      estimatedRecords: 1250,
-    },
-    {
-      id: "large",
-      name: "Large Dataset",
-      description: "100 properties with realistic data distribution",
-      estimatedRecords: 5000,
-    },
-  ];
-
-  const handleSeedDatabase = async (_datasetId?: string) => {
-    setIsSeeding(true);
-    setSeedProgress({
-      total: 100,
-      completed: 0,
-      current: "Initializing...",
-      errors: [],
-    });
-    setSeedResult(null);
-
+  // Fetch database status on component mount
+  const fetchStatus = async () => {
     try {
-      // Simulate seeding process
-      const steps = [
-        "Clearing existing data...",
-        "Creating properties...",
-        "Generating guest profiles...",
-        "Creating reviews...",
-        "Setting up relationships...",
-        "Finalizing data...",
-      ];
-
-      for (let i = 0; i < steps.length; i++) {
-        setSeedProgress((prev) =>
-          prev
-            ? {
-                ...prev,
-                completed: Math.round(((i + 1) / steps.length) * 100),
-                current: steps[i],
-              }
-            : null,
-        );
-
-        // Simulate processing time
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 + Math.random() * 2000),
-        );
-      }
-
-      setSeedResult({
-        success: true,
-        message: "Database seeded successfully!",
-        data: {
-          properties: Math.floor(Math.random() * 50) + 10,
-          reviews: Math.floor(Math.random() * 1000) + 500,
-          guests: Math.floor(Math.random() * 200) + 100,
-        },
-      });
-    } catch (_error) {
-      setSeedResult({
-        success: false,
-        message: "Failed to seed database. Please try again.",
-      });
-    } finally {
-      setIsSeeding(false);
-      setSeedProgress(null);
+      const status = await getDatabaseStatus();
+      setDbStatus(status);
+    } catch (error) {
+      console.error("Failed to fetch database status:", error);
     }
   };
 
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+
+  const performDatabaseOperation = async (
+    action: "seed" | "force" | "reseed" | "clear",
+  ) => {
+    setIsLoading(true);
+    setSeedProgress({
+      total: 100,
+      completed: 0,
+      current: "Starting operation...",
+      errors: [],
+    });
+
+    try {
+      setSeedProgress({
+        total: 100,
+        completed: 25,
+        current: "Performing operation...",
+        errors: [],
+      });
+
+      const result = await performSeedOperation(action);
+
+      setSeedProgress({
+        total: 100,
+        completed: 75,
+        current: "Refreshing data...",
+        errors: [],
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+        setLastResult(result);
+
+        // Invalidate cache
+        queryClient.removeQueries({ queryKey: ["reviews"] });
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        queryClient.refetchQueries({ queryKey: ["reviews"] });
+
+        // Refresh status
+        await fetchStatus();
+      } else {
+        toast.error(result.message);
+        setLastResult(result);
+      }
+
+      setSeedProgress({
+        total: 100,
+        completed: 100,
+        current: "Complete!",
+        errors: [],
+      });
+    } catch (error) {
+      console.error("Operation failed:", error);
+      const errorMessage = "Failed to perform operation. Please try again.";
+      toast.error(errorMessage);
+      setLastResult({
+        success: false,
+        message: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setSeedProgress(null), 1000);
+    }
+  };
+
+  const handleSeedDatabase = () => performDatabaseOperation("seed");
+  const handleForceSeed = () => performDatabaseOperation("force");
+  const handleReseedDatabase = () => performDatabaseOperation("reseed");
+
+  const seedResult = lastResult;
+  const isSeeding = isLoading || seedProgress !== null;
+  const isRefetching = queryClient.isFetching({ queryKey: ["reviews"] }) > 0;
+
   const handleCustomSeed = async () => {
     if (!customData.trim()) {
-      setSeedResult({
-        success: false,
-        message: "Please provide custom data to seed.",
-      });
+      const errorMessage = "Please provide custom data to seed.";
+      toast.error(errorMessage);
       return;
     }
 
-    try {
-      JSON.parse(customData);
-      await handleSeedDatabase("custom");
-    } catch (_error) {
-      setSeedResult({
-        success: false,
-        message: "Invalid JSON format. Please check your data.",
-      });
+    const validation = validateSeedData(customData);
+    if (!validation.valid) {
+      toast.error(validation.error || "Invalid data format");
+      return;
     }
+
+    // For now, we'll use the force seed operation
+    // In a full implementation, you'd extend the API to handle custom data
+    await handleForceSeed();
   };
 
   const handleFileSeed = async () => {
     if (!selectedFile) {
-      setSeedResult({
-        success: false,
-        message: "Please select a file to upload.",
-      });
+      const errorMessage = "Please select a file to upload.";
+      toast.error(errorMessage);
       return;
     }
 
-    await handleSeedDatabase("file");
+    // For now, we'll use the regular seed operation
+    // In a full implementation, you'd parse the file and send its contents to the API
+    await handleForceSeed();
   };
 
   const handleClearDatabase = async () => {
@@ -175,42 +184,7 @@ export function SeedPage() {
       return;
     }
 
-    setIsSeeding(true);
-    setSeedProgress({
-      total: 100,
-      completed: 0,
-      current: "Clearing database...",
-      errors: [],
-    });
-
-    try {
-      // Simulate clearing process
-      for (let i = 0; i <= 100; i += 10) {
-        setSeedProgress((prev) =>
-          prev
-            ? {
-                ...prev,
-                completed: i,
-                current: i === 100 ? "Database cleared" : "Removing data...",
-              }
-            : null,
-        );
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      }
-
-      setSeedResult({
-        success: true,
-        message: "Database cleared successfully!",
-      });
-    } catch (_error) {
-      setSeedResult({
-        success: false,
-        message: "Failed to clear database.",
-      });
-    } finally {
-      setIsSeeding(false);
-      setSeedProgress(null);
-    }
+    await performDatabaseOperation("clear");
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,6 +203,31 @@ export function SeedPage() {
           Manage and populate your database with sample data for testing and
           development
         </p>
+        {dbStatus && (
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+            <h3 className="font-medium mb-2">Current Database Status</h3>
+            <div className="flex flex-wrap gap-2 text-sm">
+              <Badge variant="outline">
+                {dbStatus.totalReviews} reviews in database
+              </Badge>
+              <Badge variant="outline">
+                Avg rating: {dbStatus.statistics.averageRating.toFixed(1)}/10
+              </Badge>
+              {Object.entries(dbStatus.statistics.reviewTypes).map(
+                ([type, count]) => (
+                  <Badge key={type} variant="secondary">
+                    {type}: {count}
+                  </Badge>
+                ),
+              )}
+              {isRefetching && (
+                <Badge variant="outline" className="animate-pulse">
+                  Refreshing...
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress Indicator */}
@@ -280,11 +279,9 @@ export function SeedPage() {
             className={seedResult.success ? "text-green-800" : "text-red-800"}
           >
             {seedResult.message}
-            {seedResult.data && (
-              <div className="mt-2 space-y-1">
-                <p>Properties created: {seedResult.data.properties}</p>
-                <p>Reviews generated: {seedResult.data.reviews}</p>
-                <p>Guest profiles: {seedResult.data.guests}</p>
+            {seedResult.count !== undefined && (
+              <div className="mt-2">
+                <p>Records processed: {seedResult.count}</p>
               </div>
             )}
           </AlertDescription>
@@ -308,29 +305,50 @@ export function SeedPage() {
             </p>
 
             <div className="space-y-3">
-              {sampleDataSets.map((dataset) => (
-                <div key={dataset.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{dataset.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {dataset.description}
-                      </p>
-                      <Badge variant="outline" className="mt-1">
-                        ~{dataset.estimatedRecords} records
-                      </Badge>
-                    </div>
-                    <Button
-                      onClick={() => handleSeedDatabase(dataset.id)}
-                      disabled={isSeeding}
-                      size="sm"
-                    >
-                      <Upload className="h-4 w-4 mr-1" />
-                      Seed
-                    </Button>
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Standard Seed</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Add sample data only if database is empty
+                    </p>
+                    <Badge variant="outline" className="mt-1">
+                      Safe operation
+                    </Badge>
                   </div>
+                  <Button
+                    onClick={handleSeedDatabase}
+                    disabled={isSeeding || isRefetching}
+                    size="sm"
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Seed
+                  </Button>
                 </div>
-              ))}
+              </div>
+
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Force Seed</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Add sample data regardless of existing data
+                    </p>
+                    <Badge variant="destructive" className="mt-1">
+                      May create duplicates
+                    </Badge>
+                  </div>
+                  <Button
+                    onClick={handleForceSeed}
+                    disabled={isSeeding || isRefetching}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Force Seed
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -376,7 +394,7 @@ export function SeedPage() {
                   />
                   <Button
                     onClick={handleCustomSeed}
-                    disabled={isSeeding}
+                    disabled={isSeeding || isRefetching}
                     className="mt-2 w-full"
                   >
                     <Upload className="h-4 w-4 mr-2" />
@@ -402,7 +420,7 @@ export function SeedPage() {
                   )}
                   <Button
                     onClick={handleFileSeed}
-                    disabled={isSeeding || !selectedFile}
+                    disabled={isSeeding || isRefetching || !selectedFile}
                     className="w-full"
                   >
                     <Upload className="h-4 w-4 mr-2" />
@@ -434,10 +452,22 @@ export function SeedPage() {
                 Download current database data as JSON or CSV
               </p>
               <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={isRefetching}
+                  onClick={() => toast.info("Export functionality coming soon")}
+                >
                   Export as JSON
                 </Button>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={isRefetching}
+                  onClick={() => toast.info("Export functionality coming soon")}
+                >
                   Export as CSV
                 </Button>
               </div>
@@ -455,10 +485,11 @@ export function SeedPage() {
                 variant="outline"
                 size="sm"
                 className="w-full"
-                disabled={isSeeding}
-                onClick={() => handleSeedDatabase("basic")}
+                disabled={isSeeding || isRefetching}
+                onClick={handleReseedDatabase}
               >
-                Reset to Sample
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Clear & Reseed
               </Button>
             </div>
 
@@ -474,7 +505,7 @@ export function SeedPage() {
                 variant="destructive"
                 size="sm"
                 className="w-full"
-                disabled={isSeeding}
+                disabled={isSeeding || isRefetching}
                 onClick={handleClearDatabase}
               >
                 Clear All Data

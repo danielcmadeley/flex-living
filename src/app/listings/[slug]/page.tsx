@@ -23,6 +23,7 @@ import {
   type FilterOptions,
 } from "@/components/ListingFilters";
 import { slugToListingName, findBestMatchingListing } from "@/lib/utils/slugs";
+import { useListingByName } from "@/hooks/use-listings";
 
 interface ReviewsResponse {
   status: "success" | "error";
@@ -41,26 +42,35 @@ export default function ListingPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [reviews, setReviews] = useState<NormalizedReview[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<ReviewsResponse["statistics"] | null>(
-    null,
-  );
-  const [listingName, setListingName] = useState<string>("");
-  const [retryCount, setRetryCount] = useState(0);
+  // Decode slug for use with the hook
+  const decodedSlug = decodeURIComponent(slug);
+
   const [filters, setFilters] = useState<FilterOptions>({
     sortBy: "date",
     sortOrder: "desc",
     reviewType: "all",
   });
 
+  // Fetch reviews for this specific listing - pass the slug directly
+  const {
+    data: reviews = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useListingByName(decodedSlug);
+
+  // Ensure reviews is always an array
+  const safeReviews = reviews || [];
+
   // Apply filters to reviews
-  const filteredReviews = useListingFilters(reviews, filters);
+  const filteredReviews = useListingFilters(safeReviews, filters);
 
   // Get available categories for filtering
   const availableCategories = Array.from(
-    new Set(reviews.flatMap((review) => Object.keys(review.categories || {}))),
+    new Set(
+      safeReviews.flatMap((review) => Object.keys(review.categories || {})),
+    ),
   );
 
   // Pagination
@@ -74,67 +84,53 @@ export default function ListingPage() {
 
   const paginatedReviews = filteredReviews.slice(startIndex, endIndex);
 
-  const fetchListingReviews = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Get listing name from reviews or convert from slug as fallback
+  const listingName =
+    safeReviews.length > 0
+      ? safeReviews[0].listingName
+      : slugToListingName(decodedSlug);
+  // Calculate stats from reviews
+  const rawCategories = safeReviews.reduce(
+    (acc, review) => {
+      Object.entries(review.categories || {}).forEach(([category, rating]) => {
+        if (!acc[category]) acc[category] = [];
+        if (rating !== undefined) acc[category].push(rating);
+      });
+      return acc;
+    },
+    {} as Record<string, number[]>,
+  );
 
-    try {
-      const decodedSlug = decodeURIComponent(slug);
-
-      // First, get all available listings to find the best match
-      const allListingsResponse = await fetch(
-        "/api/reviews/hostaway?status=published&getAllListings=true",
-      );
-      const allListingsData = await allListingsResponse.json();
-
-      let targetListingName = slugToListingName(decodedSlug);
-
-      // If we have available listings, try to find the best match
-      if (
-        allListingsData.status === "success" &&
-        allListingsData.availableListings
-      ) {
-        const bestMatch = findBestMatchingListing(
-          decodedSlug,
-          allListingsData.availableListings,
-        );
-        if (bestMatch) {
-          targetListingName = bestMatch;
-        }
-      }
-
-      setListingName(targetListingName);
-
-      const url = `/api/reviews/hostaway?status=published&listingName=${encodeURIComponent(targetListingName)}&includeStats=true`;
-      const response = await fetch(url);
-      const data: ReviewsResponse = await response.json();
-
-      if (data.status === "success") {
-        setReviews(data.data);
-        if (data.statistics) {
-          setStats(data.statistics);
-        }
-      } else {
-        setError(data.message || "Failed to fetch reviews");
-      }
-    } catch (err) {
-      setError("Network error occurred");
-      console.error("Error fetching listing reviews:", err);
-    } finally {
-      setLoading(false);
+  // Convert category arrays to averages
+  const averagedCategories: Record<string, number> = {};
+  Object.keys(rawCategories).forEach((category) => {
+    const ratings = rawCategories[category];
+    if (ratings && ratings.length > 0) {
+      averagedCategories[category] =
+        ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
     }
-  }, [slug]);
+  });
 
-  useEffect(() => {
-    if (slug) {
-      fetchListingReviews();
-    }
-  }, [slug, retryCount, fetchListingReviews]);
-
-  const handleRetry = () => {
-    setRetryCount((prev) => prev + 1);
-    setError(null);
-  };
+  const stats =
+    safeReviews.length > 0
+      ? {
+          overall:
+            safeReviews.reduce(
+              (sum, review) => sum + (review.overallRating || 0),
+              0,
+            ) / safeReviews.length,
+          totalReviews: safeReviews.length,
+          categories: averagedCategories,
+          reviewTypes: {
+            "host-to-guest": safeReviews.filter(
+              (r) => r.type === "host-to-guest",
+            ).length,
+            "guest-to-host": safeReviews.filter(
+              (r) => r.type === "guest-to-host",
+            ).length,
+          },
+        }
+      : null;
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -190,7 +186,7 @@ export default function ListingPage() {
       </div>
 
       {/* Header */}
-      {loading && !listingName ? (
+      {isLoading && !listingName ? (
         <PropertyHeaderSkeleton />
       ) : (
         <div className="mb-8">
@@ -236,7 +232,7 @@ export default function ListingPage() {
       )}
 
       {/* Loading State */}
-      {loading && reviews.length === 0 && (
+      {isLoading && safeReviews.length === 0 && (
         <div className="space-y-6">
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -258,10 +254,10 @@ export default function ListingPage() {
       )}
 
       {/* Error State */}
-      {error && (
+      {isError && (
         <ErrorFallback
-          error={new Error(error)}
-          onRetry={handleRetry}
+          error={error as Error}
+          onRetry={() => refetch()}
           title="Failed to load reviews"
           description={`We couldn't load reviews for ${listingName}. Please try again.`}
         />
@@ -316,7 +312,9 @@ export default function ListingPage() {
                       {category.replace("_", " ")}
                     </div>
                     <div className="text-lg font-bold text-blue-600">
-                      {typeof rating === "number" ? rating.toFixed(1) : "N/A"}
+                      {typeof rating === "number" && !isNaN(Number(rating))
+                        ? Number(rating).toFixed(1)
+                        : "N/A"}
                     </div>
                     <div className="text-xs text-gray-500">/10</div>
                   </div>
@@ -328,13 +326,13 @@ export default function ListingPage() {
       )}
 
       {/* Reviews */}
-      {!loading && !error && (
+      {!isLoading && !isError && (
         <div className="space-y-6">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <h2 className="text-xl font-semibold">
-              Guest Reviews ({reviews.length})
+              Guest Reviews ({safeReviews.length})
             </h2>
-            {reviews.length > 0 && (
+            {safeReviews.length > 0 && (
               <PaginationInfo
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -345,12 +343,12 @@ export default function ListingPage() {
           </div>
 
           {/* Advanced Filters */}
-          {reviews.length > 0 && (
+          {safeReviews.length > 0 && (
             <ListingFilters
               onFiltersChange={setFilters}
               reviewCount={filteredReviews.length}
               availableCategories={availableCategories}
-              isLoading={loading}
+              isLoading={isLoading}
             />
           )}
 
@@ -447,9 +445,9 @@ export default function ListingPage() {
           )}
 
           {filteredReviews.length === 0 &&
-            reviews.length > 0 &&
-            !loading &&
-            !error && (
+            safeReviews.length > 0 &&
+            !isLoading &&
+            !isError && (
               <div className="text-center py-12 text-gray-500">
                 <div className="mb-4 text-4xl">🔍</div>
                 <div className="text-lg font-medium mb-2">
@@ -474,7 +472,7 @@ export default function ListingPage() {
               </div>
             )}
 
-          {reviews.length === 0 && !loading && !error && (
+          {safeReviews.length === 0 && !isLoading && !isError && (
             <div className="text-center py-12 text-gray-500">
               <div className="mb-4 text-4xl">📝</div>
               <div className="text-lg font-medium mb-2">
@@ -501,7 +499,7 @@ export default function ListingPage() {
       )}
 
       {/* Footer */}
-      {reviews.length > 0 && !loading && !error && (
+      {safeReviews.length > 0 && !isLoading && !isError && (
         <div className="mt-12 pt-6 border-t">
           <div className="text-center">
             <Link

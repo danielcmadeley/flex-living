@@ -41,6 +41,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { NotificationCenter } from "./NotificationCenter";
+import { GlobalSearchCommand } from "./GlobalSearchCommand";
 import { createClientBrowser } from "@/lib/supabase";
 import { NormalizedReview } from "@/lib/schemas";
 
@@ -140,6 +141,12 @@ export function DashboardSidebar({
   const isCurrentPath = (url: string) => {
     if (url === "/dashboard") {
       return pathname === "/dashboard" || pathname === "/dashboard/";
+    }
+    if (url === "/dashboard/properties") {
+      return (
+        pathname === "/dashboard/properties" ||
+        pathname.startsWith("/dashboard/properties/")
+      );
     }
     return pathname === url || pathname.startsWith(url + "/");
   };
@@ -314,6 +321,8 @@ export function DashboardSidebar({
               <span className="font-medium">
                 {pathname === "/dashboard" && "Dashboard Overview"}
                 {pathname === "/dashboard/properties" && "Properties"}
+                {pathname.startsWith("/dashboard/properties/") &&
+                  "Property Details"}
                 {pathname === "/dashboard/reviews" && "Reviews"}
                 {pathname === "/dashboard/analytics" && "Analytics"}
                 {pathname === "/dashboard/search" && "Search"}
@@ -323,6 +332,7 @@ export function DashboardSidebar({
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2 px-4">
+            <GlobalSearchCommand reviews={reviews} />
             <NotificationCenter reviews={reviews} />
           </div>
         </header>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { useReviews } from "@/hooks/use-reviews";
 import { DashboardSidebar } from "./DashboardSidebar";
@@ -20,9 +20,36 @@ interface DashboardContentProps {
 
 export default function DashboardContent({ user }: DashboardContentProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<FilterState>({
     sortOrder: "desc",
   });
+
+  // Handle URL search parameters for direct navigation from global search
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get("search");
+    const urlMinRating = searchParams.get("minRating");
+    const urlStatus = searchParams.get("status");
+    const urlRecent = searchParams.get("recent");
+
+    if (urlSearchTerm || urlMinRating || urlStatus || urlRecent) {
+      const newFilters: FilterState = {
+        sortOrder: "desc",
+        searchTerm: urlSearchTerm || undefined,
+        minRating: urlMinRating ? parseInt(urlMinRating) : undefined,
+        status: urlStatus as "published" | "pending" | "draft" | undefined,
+      };
+
+      // Handle recent filter (last N days)
+      if (urlRecent) {
+        const daysAgo = new Date();
+        daysAgo.setDate(daysAgo.getDate() - parseInt(urlRecent));
+        // Note: This would require additional date filtering logic in useReviews
+      }
+
+      setFilters(newFilters);
+    }
+  }, [searchParams]);
 
   // Fetch reviews with current filters
   const { reviews, statistics, isLoading, isError, error } = useReviews({
@@ -156,6 +183,12 @@ export default function DashboardContent({ user }: DashboardContentProps) {
               </h1>
               <p className="text-muted-foreground">
                 Search and analyze review patterns and trends
+                {filters.searchTerm && (
+                  <span className="block mt-1 text-sm">
+                    Showing results for:{" "}
+                    <strong>&ldquo;{filters.searchTerm}&rdquo;</strong>
+                  </span>
+                )}
               </p>
             </div>
 
@@ -166,6 +199,18 @@ export default function DashboardContent({ user }: DashboardContentProps) {
             />
 
             <SearchAnalytics reviews={filteredReviews} />
+
+            {/* Enhanced search results when coming from global search */}
+            {(filters.searchTerm || filters.minRating || filters.status) && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Search Results</h2>
+                <ReviewsTable
+                  reviews={filteredReviews}
+                  onStatusChange={handleStatusChange}
+                  isLoading={isLoading}
+                />
+              </div>
+            )}
           </div>
         );
 

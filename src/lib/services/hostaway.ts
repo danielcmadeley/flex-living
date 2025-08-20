@@ -167,7 +167,7 @@ class HostawayService {
     return response.json() as Promise<HostawayReviewsResponse>;
   }
 
-  async getReviews(params?: {
+  async getReviews(_params?: {
     listingId?: number;
     type?: string;
     status?: string;

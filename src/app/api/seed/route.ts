@@ -61,12 +61,21 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    return NextResponse.json({
-      success: true,
-      message,
-      data: result,
-      count: result?.length || 0,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message,
+        data: result,
+        count: result?.length || 0,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    );
   } catch (error) {
     console.error("Seeding error:", error);
 
@@ -77,7 +86,14 @@ export async function POST(request: NextRequest) {
           error instanceof Error ? error.message : "Unknown error occurred",
         data: [],
       },
-      { status: 500 },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
     );
   }
 }
@@ -87,14 +103,23 @@ export async function GET() {
     const count = await ReviewsQueries.count();
     const stats = await ReviewsQueries.getStats();
 
-    return NextResponse.json({
-      success: true,
-      message: "Database status retrieved",
-      data: {
-        totalReviews: count,
-        statistics: stats,
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Database status retrieved",
+        data: {
+          totalReviews: count,
+          statistics: stats,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    );
   } catch (error) {
     console.error("Error getting database status:", error);
 
@@ -105,7 +130,14 @@ export async function GET() {
           error instanceof Error ? error.message : "Unknown error occurred",
         data: {},
       },
-      { status: 500 },
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
     );
   }
 }
