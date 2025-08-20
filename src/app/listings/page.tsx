@@ -1,22 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import { useListings } from "@/hooks/use-listings";
 import { ListingsPageLoadingState } from "@/components/loading-states";
 import { Pagination, usePagination } from "@/components/ui/pagination";
 import { createListingSlug } from "@/lib/utils/slugs";
+import { MultiPropertyMap } from "@/components/ui/google-map";
+import { getAllPropertyLocations } from "@/lib/utils/locations";
 
 export default function ListingsPage() {
-  const { listings, statistics, isLoading, isError, error, refetch } = useListings();
+  const { listings, statistics, isLoading, isError, error, refetch } =
+    useListings();
+  const router = useRouter();
 
   // Pagination for listings
   const LISTINGS_PER_PAGE = 9;
-  const { currentPage, totalPages, startIndex, endIndex, goToPage } = usePagination({
-    totalItems: listings.length,
-    itemsPerPage: LISTINGS_PER_PAGE,
-    initialPage: 1,
-  });
+  const { currentPage, totalPages, startIndex, endIndex, goToPage } =
+    usePagination({
+      totalItems: listings.length,
+      itemsPerPage: LISTINGS_PER_PAGE,
+      initialPage: 1,
+    });
 
   const paginatedListings = listings.slice(startIndex, endIndex);
 
@@ -37,7 +43,7 @@ export default function ListingsPage() {
       stars.push(
         <span key={i} className="text-yellow-400">
           ★
-        </span>
+        </span>,
       );
     }
 
@@ -45,7 +51,7 @@ export default function ListingsPage() {
       stars.push(
         <span key="half" className="text-yellow-400">
           ☆
-        </span>
+        </span>,
       );
     }
 
@@ -54,7 +60,7 @@ export default function ListingsPage() {
       stars.push(
         <span key={`empty-${i}`} className="text-gray-300">
           ☆
-        </span>
+        </span>,
       );
     }
 
@@ -118,6 +124,67 @@ export default function ListingsPage() {
               Quality accommodations across London&apos;s premium locations
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Properties Map Overview */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Property Locations</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <MultiPropertyMap
+              properties={getAllPropertyLocations().map((location) => ({
+                name: location.name,
+                lat: location.lat,
+                lng: location.lng,
+                placeId: location.placeId,
+                address: location.address,
+              }))}
+              height="400px"
+              className="rounded-lg shadow-sm"
+              onPropertyClick={(propertyName) => {
+                const slug = createListingSlug(propertyName);
+                router.push(`/listings/${slug}`);
+              }}
+            />
+          </div>
+          <div className="space-y-4">
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-medium text-gray-700 mb-2">Our Locations</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <span>🏢</span>
+                  <span>{listings.length} Properties</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <span>📍</span>
+                  <span>London, UK</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <span>⭐</span>
+                  <span>
+                    {statistics?.overall
+                      ? `${(statistics.overall / 2).toFixed(1)}/5 Average`
+                      : "Quality Rated"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-medium text-gray-700 mb-2">Quick Access</h3>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div>🚇 Near transport hubs</div>
+                <div>🏛️ Close to attractions</div>
+                <div>🛍️ Shopping districts nearby</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <div className="flex justify-between items-start mb-4">
+          <div></div>
           <div className="flex gap-2">
             <Link
               href="/"
@@ -169,7 +236,9 @@ export default function ListingsPage() {
 
             <div className="bg-white p-4 rounded shadow">
               <h3 className="font-medium text-gray-700">Total Reviews</h3>
-              <span className="text-2xl font-bold">{statistics.totalReviews}</span>
+              <span className="text-2xl font-bold">
+                {statistics.totalReviews}
+              </span>
             </div>
 
             <div className="bg-white p-4 rounded shadow">

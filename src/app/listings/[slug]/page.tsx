@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/review-source-badge";
 import { slugToListingName } from "@/lib/utils/slugs";
 import { useCombinedListingReviews } from "@/hooks/use-combined-listing-reviews";
+import { PropertyMap } from "@/components/ui/google-map";
+import { getPropertyLocation } from "@/lib/utils/locations";
 
 export default function ListingPage() {
   const params = useParams();
@@ -303,6 +305,64 @@ export default function ListingPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Property Location Map */}
+      {stats && (
+        <div className="bg-gray-50 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Property Location</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <PropertyMap
+                propertyName={listingName}
+                height="400px"
+                className="rounded-lg shadow-sm"
+                showDirectionsLink={true}
+              />
+            </div>
+            <div className="space-y-4">
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="font-medium text-gray-700 mb-2">
+                  Location Details
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span>📍</span>
+                    <span>London, UK</span>
+                  </div>
+                  {(() => {
+                    const location = getPropertyLocation(listingName);
+                    return location ? (
+                      <>
+                        {location.neighborhood && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <span>🏘️</span>
+                            <span>{location.neighborhood}</span>
+                          </div>
+                        )}
+                        {location.description && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded text-xs text-gray-600">
+                            {location.description}
+                          </div>
+                        )}
+                      </>
+                    ) : null;
+                  })()}
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="font-medium text-gray-700 mb-2">
+                  Getting There
+                </h3>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div>🚇 Near major transport links</div>
+                  <div>🚶 Walking distance to attractions</div>
+                  <div>🅿️ Parking options available</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
