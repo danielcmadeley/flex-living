@@ -4,17 +4,35 @@ export async function GET() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
-    return NextResponse.json({
-      status: "error",
-      message: "Google Maps API key not configured",
-      details: {
-        hasKey: false,
-        keyConfigured: false,
-      }
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "Google Maps API key not configured",
+        details: {
+          hasKey: false,
+          keyConfigured: false,
+        },
+      },
+      { status: 500 },
+    );
   }
 
-  const results: Record<string, any> = {
+  interface ApiStatus {
+    enabled: boolean;
+    status?: string;
+    error?: string | null;
+  }
+
+  const results: {
+    status: string;
+    apiKey: {
+      exists: boolean;
+      masked: string;
+    };
+    apis: Record<string, ApiStatus>;
+    issues?: string[];
+    recommendations?: string[];
+  } = {
     status: "checking",
     apiKey: {
       exists: true,
@@ -76,21 +94,35 @@ export async function GET() {
   }
 
   if (!results.apis.geocoding?.enabled && !results.apis.places?.enabled) {
-    issues.push("No Google Maps APIs are working. Please check your API key configuration");
+    issues.push(
+      "No Google Maps APIs are working. Please check your API key configuration",
+    );
   }
 
   // Determine overall status
-  const allApisWorking = Object.values(results.apis).every((api: any) => api.enabled);
-  const someApisWorking = Object.values(results.apis).some((api: any) => api.enabled);
+  const allApisWorking = Object.values(results.apis).every(
+    (api: ApiStatus) => api.enabled,
+  );
+  const someApisWorking = Object.values(results.apis).some(
+    (api: ApiStatus) => api.enabled,
+  );
 
-  results.status = allApisWorking ? "success" : someApisWorking ? "partial" : "error";
+  results.status = allApisWorking
+    ? "success"
+    : someApisWorking
+      ? "partial"
+      : "error";
   results.issues = issues;
   results.recommendations = [];
 
   if (!allApisWorking) {
     results.recommendations.push("Go to https://console.cloud.google.com/");
-    results.recommendations.push("Enable the following APIs: Maps JavaScript API, Places API, Geocoding API");
-    results.recommendations.push("Check that your API key has no restrictions or includes your domain");
+    results.recommendations.push(
+      "Enable the following APIs: Maps JavaScript API, Places API, Geocoding API",
+    );
+    results.recommendations.push(
+      "Check that your API key has no restrictions or includes your domain",
+    );
   }
 
   return NextResponse.json(results, {

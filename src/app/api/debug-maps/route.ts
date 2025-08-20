@@ -9,7 +9,21 @@ export async function GET(request: NextRequest) {
     // Check environment variables
     const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-    const debugInfo = {
+    const debugInfo: {
+      timestamp: string;
+      apiKey: { present: boolean; length?: number; prefix?: string };
+      testPlaceId: string;
+      environment: string | undefined;
+      placesApiTest?: {
+        status?: string;
+        result?: {
+          name?: string;
+          formatted_address?: string;
+          geometry?: { lat: number; lng: number } | null;
+        } | null;
+        error?: string | null;
+      };
+    } = {
       timestamp: new Date().toISOString(),
       apiKey: googleApiKey
         ? {

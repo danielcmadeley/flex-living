@@ -222,6 +222,7 @@ export function UrlStateProvider({
     }
 
     setIsInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
   // Handle browser navigation (back/forward)
