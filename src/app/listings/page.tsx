@@ -9,63 +9,29 @@ import { Pagination, usePagination } from "@/components/ui/pagination";
 import { createListingSlug } from "@/lib/utils/slugs";
 import { MultiPropertyMap } from "@/components/ui/google-map";
 import { getAllPropertyLocations } from "@/lib/utils/locations";
+import {
+  formatDate,
+  renderStars,
+  truncateText,
+  formatCount,
+  formatRating,
+} from "@/lib/utils/formatting";
+import { PAGINATION, RATINGS, TEXT_LIMITS } from "@/lib/constants";
 
 export default function ListingsPage() {
   const { listings, statistics, isLoading, isError, error, refetch } =
     useListings();
   const router = useRouter();
 
-  // Pagination for listings
-  const LISTINGS_PER_PAGE = 9;
+  // Pagination configuration
   const { currentPage, totalPages, startIndex, endIndex, goToPage } =
     usePagination({
       totalItems: listings.length,
-      itemsPerPage: LISTINGS_PER_PAGE,
+      itemsPerPage: PAGINATION.LISTINGS_PER_PAGE,
       initialPage: 1,
     });
 
   const paginatedListings = listings.slice(startIndex, endIndex);
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <span key={i} className="text-yellow-400">
-          ★
-        </span>,
-      );
-    }
-
-    if (hasHalfStar) {
-      stars.push(
-        <span key="half" className="text-yellow-400">
-          ☆
-        </span>,
-      );
-    }
-
-    const emptyStars = 10 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <span key={`empty-${i}`} className="text-gray-300">
-          ☆
-        </span>,
-      );
-    }
-
-    return stars;
-  };
 
   if (isLoading) {
     return <ListingsPageLoadingState />;
@@ -164,7 +130,7 @@ export default function ListingsPage() {
                   <span>⭐</span>
                   <span>
                     {statistics?.overall
-                      ? `${(statistics.overall / 2).toFixed(1)}/5 Average`
+                      ? `${formatRating(statistics.overall / 2)}/${RATINGS.FIVE_STAR_MAX} Average`
                       : "Quality Rated"}
                   </span>
                 </div>
@@ -229,8 +195,12 @@ export default function ListingsPage() {
             <div className="bg-white p-4 rounded shadow">
               <h3 className="font-medium text-gray-700">Overall Rating</h3>
               <div className="flex items-center mt-1">
-                <span className="text-2xl font-bold">{statistics.overall}</span>
-                <span className="text-sm text-gray-500 ml-1">/10</span>
+                <span className="text-2xl font-bold">
+                  {formatRating(statistics.overall, 0)}
+                </span>
+                <span className="text-sm text-gray-500 ml-1">
+                  /{RATINGS.MAX_RATING}
+                </span>
               </div>
             </div>
 
@@ -285,7 +255,7 @@ export default function ListingsPage() {
           <h2 className="text-xl font-semibold">
             Our Properties ({listings.length})
           </h2>
-          {listings.length > LISTINGS_PER_PAGE && (
+          {listings.length > PAGINATION.LISTINGS_PER_PAGE && (
             <div className="text-sm text-gray-600">
               Showing {startIndex + 1}-{Math.min(endIndex, listings.length)} of{" "}
               {listings.length} properties
@@ -294,7 +264,7 @@ export default function ListingsPage() {
         </div>
 
         {/* Pagination Top */}
-        {listings.length > LISTINGS_PER_PAGE && (
+        {listings.length > PAGINATION.LISTINGS_PER_PAGE && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -334,13 +304,13 @@ export default function ListingsPage() {
                               {renderStars(listing.averageRating)}
                             </div>
                             <span className="text-sm font-medium">
-                              {listing.averageRating.toFixed(1)}/10
+                              {formatRating(listing.averageRating)}/
+                              {RATINGS.MAX_RATING}
                             </span>
                           </div>
                         )}
                         <span className="text-sm text-gray-500">
-                          {listing.reviewCount} review
-                          {listing.reviewCount !== 1 ? "s" : ""}
+                          {formatCount(listing.reviewCount, "review")}
                         </span>
                       </div>
                     </div>
@@ -353,9 +323,10 @@ export default function ListingsPage() {
                   <div className="mb-4">
                     <p className="text-gray-600 text-sm line-clamp-2">
                       &ldquo;
-                      {listing.sampleReview.length > 100
-                        ? listing.sampleReview.substring(0, 100) + "..."
-                        : listing.sampleReview}
+                      {truncateText(
+                        listing.sampleReview,
+                        TEXT_LIMITS.REVIEW_PREVIEW,
+                      )}
                       &rdquo;
                     </p>
                   </div>
@@ -376,7 +347,7 @@ export default function ListingsPage() {
         )}
 
         {/* Pagination Bottom */}
-        {listings.length > LISTINGS_PER_PAGE && (
+        {listings.length > PAGINATION.LISTINGS_PER_PAGE && (
           <div className="mt-8">
             <Pagination
               currentPage={currentPage}

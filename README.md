@@ -148,6 +148,46 @@ pnpm lint             # Run ESLint
 - **State Management**: TanStack Query
 - **Validation**: Zod schemas
 
+## 🧪 Testing
+
+Comprehensive test suite with 5 critical tests covering core functionality:
+
+### Running Tests
+```bash
+# Install dependencies and run all tests
+npm install
+npm run test
+
+# Watch mode for development
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+
+# Visual test UI
+npm run test:ui
+```
+
+### Test Categories
+- **API Integration**: Hostaway reviews endpoint testing
+- **State Management**: Zustand store functionality
+- **UI Components**: Review filtering and search
+- **Property Analytics**: Property-specific features
+- **End-to-End**: Complete user workflows
+
+### Quick Test Commands
+```bash
+# Use the test runner script
+chmod +x scripts/test.sh
+./scripts/test.sh all          # Run all tests
+./scripts/test.sh critical     # Critical tests only
+./scripts/test.sh coverage     # With coverage
+```
+
+**Coverage Goals**: >80% overall, 100% for API routes and store logic
+
+📋 See `TESTING.md` for detailed testing documentation.
+
 ## 📱 Key Features
 
 - **Optimistic Updates**: Instant UI feedback

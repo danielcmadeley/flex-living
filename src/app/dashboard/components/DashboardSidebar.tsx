@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { logger } from "@/lib/utils/logger";
 import {
   Sidebar,
   SidebarContent,
@@ -116,7 +117,7 @@ export function DashboardSidebar({
       router.push("/login");
       router.refresh();
     } catch (error) {
-      console.error("Error logging out:", error);
+      logger.error("Failed to log out", error, { module: "DashboardSidebar" });
     } finally {
       setIsLoggingOut(false);
     }

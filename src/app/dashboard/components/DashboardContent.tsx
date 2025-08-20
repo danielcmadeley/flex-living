@@ -10,18 +10,10 @@ import { PropertiesPage } from "../pages/PropertiesPage";
 import { SeedPage } from "../pages/SeedPage";
 import { DashboardFilters } from "./DashboardFilters";
 import { ReviewsTable } from "./ReviewsTable";
+import { ReviewsGridView } from "./ReviewsGridView";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { NormalizedReview } from "@/lib/schemas";
-import {
-  Grid,
-  List,
-  Star,
-  MessageSquare,
-  Calendar,
-  ChevronRight,
-} from "lucide-react";
+import { Grid, List, ChevronRight } from "lucide-react";
 import {
   useFilters,
   useFilterActions,
@@ -32,113 +24,11 @@ import {
   useComputedValues,
 } from "@/stores/dashboard-store";
 import { ToastContainer } from "@/components/ui/toast";
+import { SUCCESS_MESSAGES } from "@/lib/constants";
+import { logger } from "@/lib/utils/logger";
 
 interface DashboardContentProps {
   user: User;
-}
-
-// Reviews Grid View Component
-function ReviewsGridView({
-  reviews,
-  isLoading,
-}: {
-  reviews: NormalizedReview[];
-  isLoading: boolean;
-}) {
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (reviews.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center h-48">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Reviews Found</h3>
-          <p className="text-muted-foreground text-center">
-            No reviews match your current filters.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {reviews.map((review) => (
-        <Card key={review.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-base">{review.guestName}</CardTitle>
-                <p className="text-sm text-muted-foreground truncate">
-                  {review.listingName}
-                </p>
-              </div>
-              <div className="flex items-center gap-1 text-yellow-500">
-                {review.overallRating && (
-                  <>
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="font-semibold">
-                      {review.overallRating.toFixed(1)}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-3">
-              <Badge
-                variant={
-                  review.type === "host-to-guest" ? "default" : "secondary"
-                }
-              >
-                {review.type === "host-to-guest"
-                  ? "Host → Guest"
-                  : "Guest → Host"}
-              </Badge>
-
-              <p className="text-sm line-clamp-3">{review.comment}</p>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {new Date(review.submittedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </div>
-                <Badge
-                  variant={
-                    review.status === "published"
-                      ? "default"
-                      : review.status === "pending"
-                        ? "secondary"
-                        : "outline"
-                  }
-                  className="text-xs"
-                >
-                  {review.status}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
 }
 
 export default function DashboardContent({ user }: DashboardContentProps) {
@@ -214,9 +104,9 @@ export default function DashboardContent({ user }: DashboardContentProps) {
     reviewId: number,
     newStatus: "published" | "pending" | "draft",
   ) => {
-    // Show success toast
-    showToast(`Review status updated to ${newStatus}`, "success");
-    console.log(`Status changed for review ${reviewId} to ${newStatus}`);
+    const dashboardLogger = logger.child("dashboard");
+    dashboardLogger.info("Review status changed", { reviewId, newStatus });
+    showToast(SUCCESS_MESSAGES.STATUS_UPDATED, "success");
   };
 
   // Render content based on current route

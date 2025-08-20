@@ -5,51 +5,19 @@ import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import { useFeaturedListings } from "@/hooks/use-listings";
 import { HomePageLoadingState } from "@/components/loading-states";
 import { createListingSlug } from "@/lib/utils/slugs";
+import {
+  formatDate,
+  renderStars,
+  truncateText,
+  formatCount,
+  formatRating,
+} from "@/lib/utils/formatting";
+import { DEFAULTS, RATINGS, TEXT_LIMITS } from "@/lib/constants";
 
 export default function HomePage() {
-  const { listings, isLoading, isError, error, refetch } =
-    useFeaturedListings(6);
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <span key={i} className="text-yellow-400">
-          ★
-        </span>,
-      );
-    }
-
-    if (hasHalfStar) {
-      stars.push(
-        <span key="half" className="text-yellow-400">
-          ☆
-        </span>,
-      );
-    }
-
-    const emptyStars = 10 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <span key={`empty-${i}`} className="text-gray-300">
-          ☆
-        </span>,
-      );
-    }
-
-    return stars;
-  };
+  const { listings, isLoading, isError, error, refetch } = useFeaturedListings(
+    DEFAULTS.FEATURED_LISTINGS_COUNT,
+  );
 
   if (isLoading) {
     return <HomePageLoadingState />;
@@ -148,13 +116,13 @@ export default function HomePage() {
                               {renderStars(listing.averageRating)}
                             </div>
                             <span className="text-sm font-medium">
-                              {listing.averageRating.toFixed(1)}/10
+                              {formatRating(listing.averageRating)}/
+                              {RATINGS.MAX_RATING}
                             </span>
                           </div>
                         )}
                         <span className="text-sm text-gray-500">
-                          {listing.reviewCount} review
-                          {listing.reviewCount !== 1 ? "s" : ""}
+                          {formatCount(listing.reviewCount, "review")}
                         </span>
                       </div>
                     </div>
@@ -167,9 +135,10 @@ export default function HomePage() {
                   <div className="mb-4">
                     <p className="text-gray-600 text-sm line-clamp-2">
                       &ldquo;
-                      {listing.sampleReview.length > 100
-                        ? listing.sampleReview.substring(0, 100) + "..."
-                        : listing.sampleReview}
+                      {truncateText(
+                        listing.sampleReview,
+                        TEXT_LIMITS.REVIEW_PREVIEW,
+                      )}
                       &rdquo;
                     </p>
                   </div>

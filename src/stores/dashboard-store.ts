@@ -3,6 +3,10 @@ import { devtools, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { useMemo } from "react";
 import type { Draft } from "immer";
+import { enableMapSet } from "immer";
+
+// Enable MapSet plugin for Immer to work with Set objects
+enableMapSet();
 
 // Types
 export interface FilterState {
@@ -74,6 +78,7 @@ export interface DashboardState {
   setLoading: (loading: boolean) => void;
   showToast: (message: string, type: "success" | "error" | "info") => void;
   dismissToast: () => void;
+  resetStore: () => void;
 
   // Computed values
   hasActiveFilters: () => boolean;
@@ -234,6 +239,13 @@ export const useDashboardStore = create<DashboardState>()(
         dismissToast: () =>
           set((state: Draft<DashboardState>) => {
             state.ui.toast = undefined;
+          }),
+
+        resetStore: () =>
+          set((state: Draft<DashboardState>) => {
+            state.filters = defaultFilters;
+            state.bulkActions = defaultBulkActions;
+            state.ui = defaultUI;
           }),
 
         // Computed values
