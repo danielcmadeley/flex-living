@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 // Generic validation function
 export function validateData<T>(
@@ -45,7 +45,7 @@ export async function validateRequestBody<T>(
 
 // Create validation error response
 export function createValidationErrorResponse(error: string) {
-  return Response.json(
+  return NextResponse.json(
     {
       status: "error",
       message: "Validation failed",

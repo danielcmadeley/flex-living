@@ -1,7 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function middleware(request: NextRequest) {
+  // Apply rate limiting to API routes
+  let rateLimitHeaders: Record<string, string> = {};
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    const rateLimitResult = await checkRateLimit(request);
+
+    if (!rateLimitResult.success && rateLimitResult.response) {
+      return rateLimitResult.response;
+    }
+
+    // Store headers for later use
+    rateLimitHeaders = rateLimitResult.headers;
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -41,6 +55,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
+
+  // Add rate limiting headers to API responses if they were checked
+  if (
+    request.nextUrl.pathname.startsWith("/api") &&
+    Object.keys(rateLimitHeaders).length > 0
+  ) {
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      supabaseResponse.headers.set(key, value);
+    });
+  }
+
   return supabaseResponse;
 }
 

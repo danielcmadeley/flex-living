@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/utils/logger";
 import { API, ERROR_MESSAGES } from "@/lib/constants";
+import { withRateLimit } from "@/lib/rate-limit";
 
 // ============================================================================
 // Types
@@ -128,102 +129,105 @@ const createMockReviews = (): TransformedReview[] => [
 // ============================================================================
 // API Route Handler
 // ============================================================================
-export async function GET(request: Request) {
-  const apiLogger = logger.child("google-reviews-api");
+export const GET = withRateLimit(
+  async (request: NextRequest) => {
+    const apiLogger = logger.child("google-reviews-api");
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const propertyName = searchParams.get("propertyName");
-    const language = searchParams.get("language") || "en";
+    try {
+      const { searchParams } = new URL(request.url);
+      const propertyName = searchParams.get("propertyName");
+      const language = searchParams.get("language") || "en";
 
-    apiLogger.info("Google reviews request received", {
-      propertyName,
-      language,
-    });
-
-    // Check for API key
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      apiLogger.error("Google API key not configured");
-      return NextResponse.json(
-        {
-          error: "Google API key not configured",
-          reviews: [],
-          fallback: true,
-        },
-        { status: 500 },
-      );
-    }
-
-    // Get the appropriate Place ID
-    const placeId = getPlaceId(propertyName);
-    apiLogger.debug("Using Place ID", { placeId, propertyName });
-
-    // Make request to Google Places API
-    const url = buildGoogleApiUrl(placeId, apiKey, language);
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(API.TIMEOUT),
-    });
-
-    if (!response.ok) {
-      apiLogger.error("Google API HTTP error", {
-        status: response.status,
-        statusText: response.statusText,
+      apiLogger.info("Google reviews request received", {
+        propertyName,
+        language,
       });
 
-      // Return mock data on API failure
+      // Check for API key
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        apiLogger.error("Google API key not configured");
+        return NextResponse.json(
+          {
+            error: "Google API key not configured",
+            reviews: [],
+            fallback: true,
+          },
+          { status: 500 },
+        );
+      }
+
+      // Get the appropriate Place ID
+      const placeId = getPlaceId(propertyName);
+      apiLogger.debug("Using Place ID", { placeId, propertyName });
+
+      // Make request to Google Places API
+      const url = buildGoogleApiUrl(placeId, apiKey, language);
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(API.TIMEOUT),
+      });
+
+      if (!response.ok) {
+        apiLogger.error("Google API HTTP error", {
+          status: response.status,
+          statusText: response.statusText,
+        });
+
+        // Return mock data on API failure
+        return NextResponse.json({
+          reviews: createMockReviews(),
+          rating: 4.5,
+          totalReviews: 3,
+          source: "mock",
+          message: "Using sample data due to API unavailability",
+        });
+      }
+
+      const data: GooglePlacesResponse = await response.json();
+
+      if (data.status !== "OK") {
+        apiLogger.warn("Google Places API returned non-OK status", {
+          status: data.status,
+          error: data.error_message,
+        });
+
+        // Return mock data for non-OK status
+        return NextResponse.json({
+          reviews: createMockReviews(),
+          rating: 4.5,
+          totalReviews: 3,
+          source: "mock",
+          message: "Using sample data",
+        });
+      }
+
+      // Transform the reviews
+      const reviews = data.result?.reviews || [];
+      const transformedReviews = reviews.map(transformGoogleReview);
+
+      apiLogger.info("Successfully fetched Google reviews", {
+        count: transformedReviews.length,
+        rating: data.result?.rating,
+      });
+
       return NextResponse.json({
-        reviews: createMockReviews(),
-        rating: 4.5,
-        totalReviews: 3,
-        source: "mock",
-        message: "Using sample data due to API unavailability",
+        reviews: transformedReviews,
+        rating: data.result?.rating || 0,
+        totalReviews: data.result?.user_ratings_total || 0,
+        source: "google",
       });
-    }
+    } catch (error) {
+      apiLogger.error("Failed to fetch Google reviews", error);
 
-    const data: GooglePlacesResponse = await response.json();
-
-    if (data.status !== "OK") {
-      apiLogger.warn("Google Places API returned non-OK status", {
-        status: data.status,
-        error: data.error_message,
-      });
-
-      // Return mock data for non-OK status
+      // Return a graceful fallback response
       return NextResponse.json({
-        reviews: createMockReviews(),
-        rating: 4.5,
-        totalReviews: 3,
-        source: "mock",
-        message: "Using sample data",
+        reviews: [],
+        rating: 0,
+        totalReviews: 0,
+        source: "error",
+        error: ERROR_MESSAGES.SERVER_ERROR,
       });
     }
-
-    // Transform the reviews
-    const reviews = data.result?.reviews || [];
-    const transformedReviews = reviews.map(transformGoogleReview);
-
-    apiLogger.info("Successfully fetched Google reviews", {
-      count: transformedReviews.length,
-      rating: data.result?.rating,
-    });
-
-    return NextResponse.json({
-      reviews: transformedReviews,
-      rating: data.result?.rating || 0,
-      totalReviews: data.result?.user_ratings_total || 0,
-      source: "google",
-    });
-  } catch (error) {
-    apiLogger.error("Failed to fetch Google reviews", error);
-
-    // Return a graceful fallback response
-    return NextResponse.json({
-      reviews: [],
-      rating: 0,
-      totalReviews: 0,
-      source: "error",
-      error: ERROR_MESSAGES.SERVER_ERROR,
-    });
-  }
-}
+  },
+  { type: "external" },
+);
