@@ -160,24 +160,3 @@ export function createSlugMapping(
 
   return mapping;
 }
-
-/**
- * Test the bidirectional conversion to ensure consistency
- */
-export function testSlugConversion(listingName: string): {
-  original: string;
-  slug: string;
-  converted: string;
-  isReversible: boolean;
-} {
-  const slug = createListingSlug(listingName);
-  const converted = slugToListingName(slug);
-  const isReversible = createListingSlug(converted) === slug;
-
-  return {
-    original: listingName,
-    slug,
-    converted,
-    isReversible,
-  };
-}

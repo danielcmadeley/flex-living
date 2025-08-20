@@ -27,10 +27,6 @@ export async function PATCH(
     const { id } = await params;
     const reviewId = parseInt(id);
 
-    console.log(
-      `[PATCH /api/reviews/${id}] Starting status update for review ${reviewId}`,
-    );
-
     if (isNaN(reviewId)) {
       logError("Invalid review ID", `Received ID: ${id}`, reviewId);
       return NextResponse.json(
@@ -40,7 +36,6 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    console.log(`[PATCH /api/reviews/${reviewId}] Request body:`, body);
 
     const validation = updateStatusSchema.safeParse(body);
 
@@ -57,9 +52,6 @@ export async function PATCH(
     }
 
     const { status } = validation.data;
-    console.log(
-      `[PATCH /api/reviews/${reviewId}] Updating status to: ${status}`,
-    );
 
     // Check if review exists
     const existingReview = await db
@@ -80,10 +72,6 @@ export async function PATCH(
       );
     }
 
-    console.log(
-      `[PATCH /api/reviews/${reviewId}] Current status: ${existingReview[0].status}, updating to: ${status}`,
-    );
-
     // Update the review status
     const updatedReview = await db
       .update(reviews)
@@ -93,10 +81,6 @@ export async function PATCH(
       })
       .where(eq(reviews.id, reviewId))
       .returning();
-
-    console.log(
-      `[PATCH /api/reviews/${reviewId}] Successfully updated. New status: ${updatedReview[0].status}`,
-    );
 
     return NextResponse.json(
       {
@@ -138,8 +122,6 @@ export async function GET(
     const { id } = await params;
     const reviewId = parseInt(id);
 
-    console.log(`[GET /api/reviews/${id}] Fetching review ${reviewId}`);
-
     if (isNaN(reviewId)) {
       logError("Invalid review ID in GET", `Received ID: ${id}`, reviewId);
       return NextResponse.json(
@@ -165,10 +147,6 @@ export async function GET(
         { status: 404 },
       );
     }
-
-    console.log(
-      `[GET /api/reviews/${reviewId}] Successfully fetched review with status: ${review[0].status}`,
-    );
 
     return NextResponse.json(
       {

@@ -21,22 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Star,
-  Eye,
-  EyeOff,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Download,
-} from "lucide-react";
+import { Star, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
 import { ReviewStatusSelect } from "./ReviewStatusSelect";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface ReviewsTableProps {
   reviews: NormalizedReview[];
-  onVisibilityToggle?: (reviewId: number, isVisible: boolean) => void;
   onStatusChange?: (
     reviewId: number,
     newStatus: "published" | "pending" | "draft",
@@ -46,7 +37,6 @@ interface ReviewsTableProps {
 
 export function ReviewsTable({
   reviews,
-  onVisibilityToggle,
   onStatusChange,
   isLoading,
 }: ReviewsTableProps) {
@@ -248,35 +238,8 @@ export function ReviewsTable({
           );
         },
       },
-      {
-        id: "actions",
-        header: "Visibility",
-        cell: ({ row }) => {
-          const review = row.original;
-          // For demo purposes, assume all reviews are visible by default
-          // In a real app, this would come from the review data
-          const isVisible = true;
-
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onVisibilityToggle?.(review.id, !isVisible);
-              }}
-              className={`p-2 ${isVisible ? "text-green-600" : "text-gray-400"}`}
-            >
-              {isVisible ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
-            </Button>
-          );
-        },
-      },
     ],
-    [onVisibilityToggle, onStatusChange],
+    [onStatusChange],
   );
 
   const table = useReactTable({

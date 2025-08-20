@@ -178,7 +178,6 @@ export class ReviewsQueries {
       // Check if data already exists
       const existingReviews = await this.getAll({ limit: 1 });
       if (existingReviews.length > 0) {
-        console.log("Mock data already exists, skipping seed.");
         return existingReviews;
       }
 
@@ -191,7 +190,6 @@ export class ReviewsQueries {
 
       // Insert mock data
       const result = await db.insert(reviews).values(reviewsForDb).returning();
-      console.log(`✅ Seeded ${result.length} mock reviews`);
       return result;
     } catch (error) {
       console.error("Error seeding mock data:", error);
@@ -202,10 +200,8 @@ export class ReviewsQueries {
   // Force reseed - clears existing data and seeds fresh
   static async forceReseed(): Promise<Review[]> {
     try {
-      console.log("🗑️ Clearing existing reviews...");
       await db.delete(reviews);
 
-      console.log("🌱 Seeding fresh mock data...");
       const reviewsForDb = mockReviews.map((mockReview) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id: _, ...review } = mockReview;
@@ -213,7 +209,6 @@ export class ReviewsQueries {
       });
 
       const result = await db.insert(reviews).values(reviewsForDb).returning();
-      console.log(`✅ Force seeded ${result.length} mock reviews`);
       return result;
     } catch (error) {
       console.error("Error force reseeding:", error);
@@ -224,8 +219,6 @@ export class ReviewsQueries {
   // Seed without checking for existing data
   static async forceSeedMockData(): Promise<Review[]> {
     try {
-      console.log("🌱 Force seeding mock data (ignoring existing data)...");
-
       // Prepare mock data for database insertion (remove id field)
       const reviewsForDb = mockReviews.map((mockReview) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -235,7 +228,6 @@ export class ReviewsQueries {
 
       // Insert mock data without checking for existing
       const result = await db.insert(reviews).values(reviewsForDb).returning();
-      console.log(`✅ Force seeded ${result.length} mock reviews`);
       return result;
     } catch (error) {
       console.error("Error force seeding mock data:", error);
@@ -246,9 +238,7 @@ export class ReviewsQueries {
   // Clear all reviews
   static async clearAllReviews(): Promise<boolean> {
     try {
-      console.log("🗑️ Clearing all reviews...");
       await db.delete(reviews);
-      console.log("✅ All reviews cleared");
       return true;
     } catch (error) {
       console.error("Error clearing reviews:", error);

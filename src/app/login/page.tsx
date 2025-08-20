@@ -60,6 +60,15 @@ export default function LoginPage() {
     }
   };
 
+  const fillAssessmentCredentials = () => {
+    setFormData({
+      email: "manager@theflex.global",
+      password: "manager@123",
+    });
+    setError("");
+    setFieldErrors({});
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -70,6 +79,24 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Sign in to access the Flex Living dashboard
           </p>
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-center text-sm text-blue-800 font-medium">
+              Assessment Login Credentials:
+            </p>
+            <p className="text-center text-sm text-blue-700">
+              Email: manager@theflex.global
+            </p>
+            <p className="text-center text-sm text-blue-700">
+              Password: manager@123
+            </p>
+            <button
+              type="button"
+              onClick={fillAssessmentCredentials}
+              className="mt-2 w-full text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Use Assessment Credentials
+            </button>
+          </div>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">

@@ -21,11 +21,6 @@ interface MutationContext {
 export function useUpdateReviewStatus() {
   const queryClient = useQueryClient();
 
-  console.log("[Mutation Hook] useUpdateReviewStatus initialized", {
-    environment: process.env.NODE_ENV,
-    queryClient: queryClient ? "available" : "missing",
-  });
-
   return useMutation<
     UpdateReviewStatusResponse,
     Error,
@@ -36,13 +31,6 @@ export function useUpdateReviewStatus() {
       reviewId,
       status,
     }: UpdateReviewStatusParams): Promise<UpdateReviewStatusResponse> => {
-      console.log("[Mutation] Starting API call:", {
-        reviewId,
-        status,
-        url: `/api/reviews/${reviewId}`,
-        timestamp: new Date().toISOString(),
-      });
-
       const response = await fetch(`/api/reviews/${reviewId}`, {
         method: "PATCH",
         headers: {
@@ -61,8 +49,6 @@ export function useUpdateReviewStatus() {
       });
 
       const result = await response.json();
-
-      console.log("[Mutation] API response data:", result);
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to update review status");
@@ -109,7 +95,6 @@ export function useUpdateReviewStatus() {
             ),
           };
 
-          console.log("[Mutation] Optimistic update applied immediately");
           return updatedData;
         },
       );
@@ -118,11 +103,6 @@ export function useUpdateReviewStatus() {
       return { previousData };
     },
     onSuccess: (data, variables) => {
-      console.log("[Mutation Success] Server confirmed status update", {
-        reviewId: variables.reviewId,
-        newStatus: variables.status,
-      });
-
       // The optimistic update was already applied in onMutate
       // Just show success feedback to user
       toast.success(`Review status updated to ${variables.status}`, {
@@ -148,7 +128,6 @@ export function useUpdateReviewStatus() {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
-        console.log("[Mutation Error] Optimistic updates reverted");
       }
 
       toast.error(error.message || "Failed to update review status", {

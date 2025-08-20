@@ -185,7 +185,6 @@ class HostawayService {
     // return this.makeAuthenticatedRequest(`/reviews?${queryParams.toString()}`);
 
     // For now, using mock data regardless of params
-    console.log("Mock implementation - params received but not used:", params);
     return this.getMockReviews();
   }
 
