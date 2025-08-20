@@ -15,6 +15,23 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
+    const url = new URL(request.url);
+    const getAllListings = url.searchParams.get("getAllListings");
+
+    // If requesting all available listings, return them
+    if (getAllListings === "true") {
+      const allReviews = await ReviewsQueries.getAll({});
+      const availableListings = Array.from(
+        new Set(allReviews.map((review) => review.listingName)),
+      ).filter(Boolean);
+
+      return NextResponse.json({
+        status: "success",
+        availableListings,
+        total: availableListings.length,
+      });
+    }
+
     // Validate query parameters
     const validation = validateQueryParams(reviewQuerySchema, request);
 
@@ -47,13 +64,15 @@ export async function GET(request: NextRequest) {
       status: review.status as "published" | "pending" | "draft",
       overallRating: review.rating,
       comment: review.publicReview,
-      categories: review.reviewCategory.reduce(
-        (acc, cat) => {
-          acc[cat.category as keyof typeof acc] = cat.rating;
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
+      categories: Array.isArray(review.reviewCategory)
+        ? review.reviewCategory.reduce(
+            (acc, cat) => {
+              acc[cat.category as keyof typeof acc] = cat.rating;
+              return acc;
+            },
+            {} as Record<string, number>,
+          )
+        : {},
       submittedAt: review.submittedAt,
       guestName: review.guestName,
       listingName: review.listingName,

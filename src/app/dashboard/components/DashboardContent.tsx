@@ -12,6 +12,7 @@ import { NotificationCenter } from "./NotificationCenter";
 import { DatabaseSeeder } from "./DatabaseSeeder";
 import { ReviewStatusDebug } from "./ReviewStatusDebug";
 import LogoutButton from "./LogoutButton";
+import { SearchAnalytics } from "@/components/SearchAnalytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DashboardContentProps {
@@ -140,9 +141,10 @@ export default function DashboardContent({ user }: DashboardContentProps) {
 
           {/* Tabbed Content */}
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview & Charts</TabsTrigger>
               <TabsTrigger value="analytics">Advanced Analytics</TabsTrigger>
+              <TabsTrigger value="search">Search Analytics</TabsTrigger>
               <TabsTrigger value="reviews">Review Management</TabsTrigger>
               <TabsTrigger value="database">Database</TabsTrigger>
             </TabsList>
@@ -170,6 +172,13 @@ export default function DashboardContent({ user }: DashboardContentProps) {
                   reviews={filteredReviews}
                   isLoading={isLoading}
                 />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="search" className="space-y-6">
+              {/* Search Analytics */}
+              <div>
+                <SearchAnalytics reviews={filteredReviews} />
               </div>
             </TabsContent>
 
