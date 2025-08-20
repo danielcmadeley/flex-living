@@ -360,6 +360,12 @@ export default function ListingPage() {
                         width={32}
                         height={32}
                         className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                        unoptimized={review.authorPhoto.includes(
+                          "googleusercontent.com",
+                        )}
                       />
                     )}
                   </div>
