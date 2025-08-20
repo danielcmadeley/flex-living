@@ -192,7 +192,7 @@ export const DELETE = withRateLimit(
       // Import redis directly for manual operations
       const { redis } = await import("@/lib/rate-limit/redis");
 
-      let resetResults = [];
+      const resetResults = [];
 
       if (type && rateLimiters[type]) {
         // Reset specific rate limiter

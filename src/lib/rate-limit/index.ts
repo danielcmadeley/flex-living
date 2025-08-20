@@ -10,7 +10,7 @@ import {
 import { logger } from "@/lib/utils/logger";
 
 // Higher-order function to wrap API routes with rate limiting
-export function withRateLimit<T extends any[]>(
+export function withRateLimit<T extends unknown[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>,
   options?: {
     type?: RateLimitType;
