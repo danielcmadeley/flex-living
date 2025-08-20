@@ -180,7 +180,7 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     if (hasUrlParams) {
       setFilters(urlFilters);
     }
-  }, []); // Only run on mount
+  }, [enabled, parseUrlToFilters, searchParams, setFilters]); // Only run on mount
 
   // Clear URL params
   const clearUrl = useCallback(() => {
@@ -244,7 +244,6 @@ export function useUrlFilters() {
 // Hook for deep linking to specific review sets
 export function useDeepLinking() {
   const router = useRouter();
-  const pathname = usePathname();
 
   const navigateToReviews = useCallback(
     (filters: Partial<FilterState>) => {

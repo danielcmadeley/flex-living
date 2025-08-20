@@ -35,7 +35,6 @@ export const metadata: Metadata = {
     title: "Flex Living - Premium London Accommodations",
     description: "Discover exceptional stays across London's finest locations",
   },
-  viewport: "width=device-width, initial-scale=1",
   robots: {
     index: true,
     follow: true,
@@ -44,6 +43,11 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 interface RootLayoutProps {

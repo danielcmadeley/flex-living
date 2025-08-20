@@ -95,22 +95,28 @@ export function renderStars(
   // Add full stars
   for (let i = 0; i < fullStars; i++) {
     stars.push(
-      React.createElement("span", {
-        key: `full-${i}`,
-        className: filledClass,
-        children: filledChar,
-      }),
+      React.createElement(
+        "span",
+        {
+          key: `full-${i}`,
+          className: filledClass,
+        },
+        filledChar,
+      ),
     );
   }
 
   // Add half star if needed
   if (hasHalfStar && fullStars < maxStars) {
     stars.push(
-      React.createElement("span", {
-        key: "half",
-        className: halfClass,
-        children: halfChar,
-      }),
+      React.createElement(
+        "span",
+        {
+          key: "half",
+          className: halfClass,
+        },
+        halfChar,
+      ),
     );
   }
 
@@ -118,11 +124,14 @@ export function renderStars(
   const emptyStarsCount = maxStars - Math.ceil(rating);
   for (let i = 0; i < emptyStarsCount; i++) {
     stars.push(
-      React.createElement("span", {
-        key: `empty-${i}`,
-        className: emptyClass,
-        children: emptyChar,
-      }),
+      React.createElement(
+        "span",
+        {
+          key: `empty-${i}`,
+          className: emptyClass,
+        },
+        emptyChar,
+      ),
     );
   }
 

@@ -95,7 +95,7 @@ const transformGoogleReview = (
   language: review.language,
 });
 
-const createMockReviews = (propertyName: string): TransformedReview[] => [
+const createMockReviews = (): TransformedReview[] => [
   {
     id: "mock-1",
     author: "John Smith",
@@ -173,7 +173,7 @@ export async function GET(request: Request) {
 
       // Return mock data on API failure
       return NextResponse.json({
-        reviews: createMockReviews(propertyName || "Property"),
+        reviews: createMockReviews(),
         rating: 4.5,
         totalReviews: 3,
         source: "mock",
@@ -191,7 +191,7 @@ export async function GET(request: Request) {
 
       // Return mock data for non-OK status
       return NextResponse.json({
-        reviews: createMockReviews(propertyName || "Property"),
+        reviews: createMockReviews(),
         rating: 4.5,
         totalReviews: 3,
         source: "mock",

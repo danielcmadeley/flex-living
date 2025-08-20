@@ -6,22 +6,17 @@ import type { User } from "@supabase/supabase-js";
 import { useReviews } from "@/hooks/use-reviews";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { HomePage } from "../pages/HomePage";
-import { PropertiesPage } from "../pages/PropertiesPage";
 import { SeedPage } from "../pages/SeedPage";
 import { DashboardFilters } from "./DashboardFilters";
 import { ReviewsTable } from "./ReviewsTable";
 import { ReviewsGridView } from "./ReviewsGridView";
 import { Button } from "@/components/ui/button";
-import { NormalizedReview } from "@/lib/schemas";
-import { Grid, List, ChevronRight } from "lucide-react";
+import { Grid, List } from "lucide-react";
 import {
   useFilters,
   useFilterActions,
   useUIState,
   useUIActions,
-  useBulkActions,
-  useBulkActionMethods,
-  useComputedValues,
 } from "@/stores/dashboard-store";
 import { ToastContainer } from "@/components/ui/toast";
 import { SUCCESS_MESSAGES } from "@/lib/constants";
@@ -40,8 +35,6 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   const { setFilters } = useFilterActions();
   const uiState = useUIState();
   const { setViewMode, showToast, dismissToast } = useUIActions();
-  const bulkActions = useBulkActions();
-  const { hasActiveFilters } = useComputedValues();
 
   // Handle URL search parameters for direct navigation from global search
   useEffect(() => {
@@ -74,7 +67,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   }, [searchParams, setFilters]);
 
   // Fetch reviews with current filters
-  const { reviews, statistics, isLoading, isError, error } = useReviews({
+  const { reviews, statistics, isLoading } = useReviews({
     ...filters,
     includeStats: true,
   });

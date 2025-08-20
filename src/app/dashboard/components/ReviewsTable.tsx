@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -22,18 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Star,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Download,
-  Trash2,
-  Check,
-  X,
-} from "lucide-react";
+import { Star, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
 import { NormalizedReview } from "@/lib/schemas";
 import { ReviewStatusSelect } from "./ReviewStatusSelect";
+import { logger } from "@/lib/utils/logger";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useBulkActions,
@@ -108,7 +100,7 @@ export function ReviewsTable({
         "success",
       );
       clearSelection();
-    } catch (error) {
+    } catch {
       showToast("Failed to update reviews", "error");
     } finally {
       setPerformingBulkAction(false);
@@ -116,10 +108,10 @@ export function ReviewsTable({
     }
   };
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     const reviewIds = reviews.map((review) => review.id);
     selectAllReviews(reviewIds);
-  };
+  }, [reviews, selectAllReviews]);
 
   const exportToCSV = () => {
     const headers = [
@@ -161,12 +153,13 @@ export function ReviewsTable({
   };
 
   const forceRefresh = () => {
-    console.log("[ReviewsTable] Force refresh triggered");
+    const tableLogger = logger.child("ReviewsTable");
+    tableLogger.debug("Force refresh triggered");
     // Clear all review caches
     queryClient.removeQueries({ queryKey: ["reviews"] });
     // Force refetch
     queryClient.refetchQueries({ queryKey: ["reviews"], type: "all" });
-    console.log("[ReviewsTable] Cache cleared and refetch initiated");
+    tableLogger.debug("Cache cleared and refetch initiated");
   };
 
   const columns: ColumnDef<NormalizedReview>[] = useMemo(
@@ -174,7 +167,7 @@ export function ReviewsTable({
       // Selection column
       {
         id: "select",
-        header: ({ table }) => (
+        header: () => (
           <Checkbox
             checked={bulkActions.isSelectAllMode}
             onCheckedChange={handleSelectAll}
@@ -340,7 +333,13 @@ export function ReviewsTable({
         },
       },
     ],
-    [onStatusChange],
+    [
+      onStatusChange,
+      bulkActions.isSelectAllMode,
+      handleSelectAll,
+      isReviewSelected,
+      toggleReviewSelection,
+    ],
   );
 
   const table = useReactTable({
