@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,7 +31,7 @@ import { slugToListingName } from "@/lib/utils/slugs";
 import { useCombinedListingReviews } from "@/hooks/use-combined-listing-reviews";
 import { PropertyMap } from "@/components/ui/google-map";
 import { getPropertyLocation } from "@/lib/utils/locations";
-import { getAllPropertyImages, imageToProps } from "@/lib/utils/images";
+import { getAllPropertyImages } from "@/lib/utils/images";
 
 export default function ListingPage() {
   const params = useParams();
@@ -49,7 +49,7 @@ export default function ListingPage() {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedDates, setSelectedDates] = useState({
+  const [selectedDates] = useState({
     checkIn: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
     checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Day after tomorrow
   });
@@ -526,15 +526,15 @@ export default function ListingPage() {
                 <p className="text-gray-700 leading-relaxed mb-4">
                   Our property features modern furnishings, high-end appliances,
                   and thoughtful amenities designed to make your stay as
-                  comfortable as possible. Whether you're visiting London for
-                  business or leisure, you'll find everything you need for a
-                  memorable stay.
+                  comfortable as possible. Whether you&apos;re visiting London
+                  for business or leisure, you&apos;ll find everything you need
+                  for a memorable stay.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  Located in one of London's most desirable neighborhoods,
-                  you'll have easy access to world-class dining, shopping, and
-                  cultural attractions, while enjoying the peace and privacy of
-                  your own beautifully appointed apartment.
+                  Located in one of London&apos;s most desirable neighborhoods,
+                  you&apos;ll have easy access to world-class dining, shopping,
+                  and cultural attractions, while enjoying the peace and privacy
+                  of your own beautifully appointed apartment.
                 </p>
               </div>
 
@@ -813,8 +813,8 @@ export default function ListingPage() {
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-700">
                       <strong>Need to cancel or modify your booking?</strong>{" "}
-                      Contact our support team as soon as possible. We're here
-                      to help make the process as smooth as possible.
+                      Contact our support team as soon as possible. We&apos;re
+                      here to help make the process as smooth as possible.
                     </p>
                   </div>
                 </div>
@@ -950,7 +950,7 @@ export default function ListingPage() {
                                 {review.author}
                               </h3>
                               {review.authorPhoto ? (
-                                <img
+                                <Image
                                   src={review.authorPhoto}
                                   alt={review.author}
                                   width={32}

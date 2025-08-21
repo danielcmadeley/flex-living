@@ -29,31 +29,22 @@ interface MapBounds {
   west: number;
 }
 
-interface PropertyLocation {
-  name: string;
-  lat: number;
-  lng: number;
-  placeId: string;
-  address: string;
-}
-
 // Declare global google types for TypeScript
 declare global {
   interface Window {
-    google: any;
+    google: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 }
 
 export default function ListingsPage() {
-  const { listings, statistics, isLoading, isError, error, refetch } =
-    useListings();
+  const { listings, isLoading, isError, error, refetch } = useListings();
   const router = useRouter();
 
   // Map synchronization state
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const [visibleProperties, setVisibleProperties] = useState<string[]>([]);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<unknown>(null);
 
   // Get all property locations
   const allPropertyLocations = getAllPropertyLocations();
@@ -106,7 +97,7 @@ export default function ListingsPage() {
         return prev;
       });
     }
-  }, [mapBounds]);
+  }, [mapBounds, allPropertyLocations, isPropertyInBounds]);
 
   // Handle map bounds change
   const handleMapBoundsChange = useCallback((bounds: MapBounds) => {
@@ -133,33 +124,6 @@ export default function ListingsPage() {
       router.push(`/listings/${slug}`);
     },
     [router],
-  );
-
-  // Handle property click from grid
-  const handleGridPropertyClick = useCallback(
-    (propertyName: string) => {
-      setSelectedProperty(propertyName);
-
-      // Find the property location and center map on it
-      const propertyLocation = allPropertyLocations.find(
-        (location) => location.name === propertyName,
-      );
-
-      if (
-        propertyLocation &&
-        propertyLocation.lat &&
-        propertyLocation.lng &&
-        mapInstanceRef.current
-      ) {
-        const position = {
-          lat: propertyLocation.lat,
-          lng: propertyLocation.lng,
-        };
-        mapInstanceRef.current.panTo(position);
-        mapInstanceRef.current.setZoom(15);
-      }
-    },
-    [allPropertyLocations],
   );
 
   // Memoize property data to prevent unnecessary re-renders

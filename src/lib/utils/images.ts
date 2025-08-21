@@ -92,14 +92,6 @@ function getPropertyType(propertyName: string): keyof typeof IMAGE_CATEGORIES {
 /**
  * Gets neighborhood from property name
  */
-function getNeighborhood(propertyName: string): string {
-  for (const neighborhood of Object.keys(NEIGHBORHOOD_THEMES)) {
-    if (propertyName.includes(neighborhood)) {
-      return neighborhood;
-    }
-  }
-  return "London"; // default
-}
 
 /**
  * Generates a consistent seed for a property to ensure same images every time
@@ -120,14 +112,11 @@ function generateSeed(propertyName: string, imageIndex: number): number {
  */
 export function generatePropertyImages(propertyName: string): PropertyImageSet {
   const propertyType = getPropertyType(propertyName);
-  const neighborhood = getNeighborhood(propertyName);
+
   const categories = IMAGE_CATEGORIES[propertyType];
 
   // Generate main image
   const mainSeed = generateSeed(propertyName, 0);
-  const mainCategory =
-    NEIGHBORHOOD_THEMES[neighborhood as keyof typeof NEIGHBORHOOD_THEMES] ||
-    "luxury-apartment";
 
   const main: PropertyImage = {
     id: `${propertyName}-main`,
