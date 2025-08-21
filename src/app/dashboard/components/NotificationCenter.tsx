@@ -118,17 +118,17 @@ export function NotificationCenter({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative"
+        className="relative border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md"
       >
         {unreadCount > 0 ? (
-          <BellRing className="h-4 w-4" />
+          <BellRing className="h-4 w-4 text-blue-600" />
         ) : (
-          <Bell className="h-4 w-4" />
+          <Bell className="h-4 w-4 text-gray-600" />
         )}
         {unreadCount > 0 && (
           <Badge
             variant="destructive"
-            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+            className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-semibold shadow-sm animate-pulse"
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </Badge>
@@ -137,35 +137,44 @@ export function NotificationCenter({
 
       {/* Notification Panel */}
       {isOpen && (
-        <Card className="absolute right-0 top-full mt-2 w-96 shadow-lg z-50 max-h-96">
-          <CardHeader className="pb-3">
+        <Card className="absolute right-0 top-full mt-2 w-96 shadow-xl border-gray-200/60 z-50 max-h-96 bg-white/95 backdrop-blur-sm">
+          <CardHeader className="pb-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Notifications</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Bell className="h-4 w-4 text-blue-600" />
+                </div>
+                <CardTitle className="text-lg font-bold text-gray-900">
+                  Notifications
+                </CardTitle>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowSettings(!showSettings)}
+                  className="hover:bg-gray-100 rounded-md transition-colors"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-4 w-4 text-gray-500" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(false)}
+                  className="hover:bg-gray-100 rounded-md transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4 text-gray-500" />
                 </Button>
               </div>
             </div>
 
             {unreadCount > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
+              <div className="flex items-center justify-between text-sm mt-3">
+                <span className="text-gray-600 font-medium">
                   {unreadCount} unread notification
                   {unreadCount !== 1 ? "s" : ""}
                   {highPriorityCount > 0 && (
-                    <span className="text-red-600 font-medium">
+                    <span className="text-red-600 font-semibold">
                       {" "}
                       ({highPriorityCount} urgent)
                     </span>
@@ -175,7 +184,7 @@ export function NotificationCenter({
                   variant="ghost"
                   size="sm"
                   onClick={markAllAsRead}
-                  className="text-xs p-1 h-auto"
+                  className="text-xs p-2 h-auto hover:bg-blue-50 text-blue-600 hover:text-blue-700 font-medium transition-colors rounded-md"
                 >
                   Mark all read
                 </Button>
@@ -186,26 +195,50 @@ export function NotificationCenter({
           <CardContent className="p-0">
             {/* Settings Panel */}
             {showSettings && (
-              <div className="p-4 border-b bg-gray-50">
-                <h4 className="font-medium text-sm mb-2">
+              <div className="p-4 border-b bg-gradient-to-br from-blue-50 to-indigo-50">
+                <h4 className="font-semibold text-sm mb-3 text-gray-800">
                   Notification Settings
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="rounded" />
-                    New reviews
+                <div className="space-y-3 text-sm">
+                  <label className="flex items-center gap-3 hover:bg-white/50 p-2 rounded-md transition-colors cursor-pointer">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      New reviews
+                    </span>
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="rounded" />
-                    Low ratings (≤5/10)
+                  <label className="flex items-center gap-3 hover:bg-white/50 p-2 rounded-md transition-colors cursor-pointer">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Low ratings (≤5/10)
+                    </span>
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="rounded" />
-                    Response required
+                  <label className="flex items-center gap-3 hover:bg-white/50 p-2 rounded-md transition-colors cursor-pointer">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Response required
+                    </span>
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" defaultChecked className="rounded" />
-                    Milestones
+                  <label className="flex items-center gap-3 hover:bg-white/50 p-2 rounded-md transition-colors cursor-pointer">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700 font-medium">
+                      Milestones
+                    </span>
                   </label>
                 </div>
               </div>
@@ -214,63 +247,72 @@ export function NotificationCenter({
             {/* Notifications List */}
             <div className="h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground">
-                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>No notifications</p>
-                  <p className="text-xs">You&apos;re all caught up!</p>
+                <div className="p-8 text-center">
+                  <div className="p-3 bg-gray-100 rounded-full w-fit mx-auto mb-4">
+                    <Bell className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="font-semibold text-gray-800 mb-1">
+                    No notifications
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    You&apos;re all caught up!
+                  </p>
                 </div>
               ) : (
-                <div className="divide-y">
+                <div className="divide-y divide-gray-100">
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
                       className={`p-4 border-l-4 ${getPriorityColor(notification.priority)} ${
-                        !notification.read ? "bg-blue-50" : "bg-white"
-                      } hover:bg-gray-50 transition-colors`}
+                        !notification.read ? "bg-blue-50/50" : "bg-white"
+                      } hover:bg-gray-50 transition-all duration-150`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-0.5">
+                        <div className="flex-shrink-0 mt-1 p-2 bg-white rounded-lg shadow-sm border border-gray-100">
                           {getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <p
-                                className={`text-sm font-medium ${!notification.read ? "text-gray-900" : "text-gray-700"}`}
+                                className={`text-sm font-semibold ${!notification.read ? "text-gray-900" : "text-gray-700"}`}
                               >
                                 {notification.title}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                                 {notification.message}
                               </p>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-xs text-muted-foreground">
+                              <div className="flex items-center gap-2 mt-3">
+                                <span className="text-xs text-gray-500 font-medium">
                                   {formatTimeAgo(notification.timestamp)}
                                 </span>
                                 {notification.priority === "high" && (
                                   <Badge
                                     variant="destructive"
-                                    className="text-xs"
+                                    className="text-xs font-semibold shadow-sm"
                                   >
                                     Urgent
                                   </Badge>
                                 )}
                                 {notification.actionRequired && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs font-medium border-orange-200 bg-orange-50 text-orange-700"
+                                  >
                                     Action Required
                                   </Badge>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 ml-2">
+                            <div className="flex items-center gap-1 ml-3">
                               {!notification.read && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => markAsRead(notification.id)}
-                                  className="p-1 h-auto"
+                                  className="p-1.5 h-auto hover:bg-green-100 rounded-md transition-colors group"
                                 >
-                                  <CheckCircle className="h-3 w-3" />
+                                  <CheckCircle className="h-3 w-3 text-gray-400 group-hover:text-green-600" />
                                 </Button>
                               )}
                               <Button
@@ -279,9 +321,9 @@ export function NotificationCenter({
                                 onClick={() =>
                                   dismissNotification(notification.id)
                                 }
-                                className="p-1 h-auto text-gray-400 hover:text-gray-600"
+                                className="p-1.5 h-auto hover:bg-red-100 rounded-md transition-colors group"
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3 w-3 text-gray-400 group-hover:text-red-600" />
                               </Button>
                             </div>
                           </div>

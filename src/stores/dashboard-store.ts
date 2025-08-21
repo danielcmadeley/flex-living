@@ -90,7 +90,6 @@ export interface DashboardState {
 const defaultFilters: FilterState = {
   sortOrder: "desc",
   includeStats: true,
-  limit: 50,
 };
 
 const defaultBulkActions: BulkActionState = {

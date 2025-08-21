@@ -47,96 +47,138 @@ export function HomePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+      <div className="space-y-3">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
           Dashboard Overview
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-gray-600 text-lg leading-relaxed max-w-3xl">
           Complete analytics and insights for your Flex Living properties.
           Monitor performance, track trends, and optimize your hosting strategy.
         </p>
       </div>
 
       {/* Key Metrics Overview */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          Key Performance Metrics
-        </h2>
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-50 rounded-lg">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Key Performance Metrics
+            </h2>
+            <p className="text-sm text-gray-600 mt-0.5">
+              Real-time overview of your property performance
+            </p>
+          </div>
+        </div>
         <DashboardOverview />
       </div>
 
       {/* Performance Charts */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
-          Performance Analytics
-        </h2>
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-50 rounded-lg">
+            <BarChart3 className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Performance Analytics
+            </h2>
+            <p className="text-sm text-gray-600 mt-0.5">
+              Detailed charts and trends across all properties
+            </p>
+          </div>
+        </div>
         <PerformanceCharts reviews={reviews} isLoading={isLoading} />
       </div>
 
       {/* Advanced Analytics */}
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Target className="h-5 w-5" />
-          Advanced Insights & Trends
-        </h2>
+      <div className="space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-50 rounded-lg">
+            <Target className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Advanced Insights & Trends
+            </h2>
+            <p className="text-sm text-gray-600 mt-0.5">
+              Deep analytics and predictive insights
+            </p>
+          </div>
+        </div>
         <AdvancedAnalytics reviews={reviews} isLoading={isLoading} />
       </div>
 
       {/* Summary Footer */}
       {!isLoading && (
-        <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Quick Summary
-            </CardTitle>
+        <Card className="bg-gradient-to-br from-white to-gray-50/50 border-gray-200/60 backdrop-blur-sm shadow-lg">
+          <CardHeader className="pb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-yellow-50 rounded-lg">
+                <Star className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  Quick Summary
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  Key statistics at a glance
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Building className="h-6 w-6 text-blue-600" />
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-xl shadow-sm">
+                  <Building className="h-7 w-7 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">
                     Total Properties
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold text-gray-900">
                     {new Set(reviews.map((r) => r.listingName)).size}
                   </p>
-                  <p className="text-xs text-gray-500">Active listings</p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Active listings
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Users className="h-6 w-6 text-green-600" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-xl shadow-sm">
+                  <Users className="h-7 w-7 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">
                     Total Reviews
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold text-gray-900">
                     {statistics?.totalReviews || 0}
                   </p>
-                  <p className="text-xs text-gray-500">All time feedback</p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    All time feedback
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Star className="h-6 w-6 text-yellow-600" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-xl shadow-sm">
+                  <Star className="h-7 w-7 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-semibold text-gray-700 mb-1">
                     Average Rating
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold text-gray-900">
                     {statistics?.overall?.toFixed(1) || "N/A"}/10
                   </p>
-                  <p className="text-xs text-gray-500">Overall performance</p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Overall performance
+                  </p>
                 </div>
               </div>
             </div>

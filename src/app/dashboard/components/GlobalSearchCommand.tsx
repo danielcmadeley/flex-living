@@ -222,14 +222,15 @@ export function GlobalSearchCommand({
       {/* Search Trigger Button */}
       <Button
         variant="outline"
-        size="sm"
+        size="default"
         onClick={() => setOpen(true)}
-        className={`relative ${className}`}
+        className={`relative min-w-[280px] justify-start bg-white/95 backdrop-blur-sm border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md ${className}`}
       >
-        <Search className="h-4 w-4 mr-2" />
-        <span className="hidden sm:inline-flex">Search...</span>
-        <span className="sm:hidden">Search</span>
-        <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 hidden select-none items-center gap-1 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+        <Search className="h-4 w-4 mr-3 text-gray-500 shrink-0" />
+        <span className="text-gray-500 text-sm font-medium">
+          Search reviews, properties, guests...
+        </span>
+        <kbd className="pointer-events-none ml-auto hidden select-none items-center gap-1 rounded-md border border-gray-200 bg-gray-100 px-2 py-1 font-mono text-[11px] font-semibold text-gray-600 sm:flex shadow-sm">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
@@ -240,13 +241,16 @@ export function GlobalSearchCommand({
           placeholder="Search reviews, properties, guests, or navigate..."
           value={searchTerm}
           onValueChange={setSearchTerm}
+          className="h-12 text-base border-0 border-b border-gray-200 rounded-none focus:ring-0 focus:border-blue-500 transition-colors"
         />
-        <CommandList className="max-h-[400px]">
+        <CommandList className="max-h-[450px] py-2">
           <CommandEmpty>
-            <div className="text-center py-6">
-              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No results found</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="text-center py-8">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                No results found
+              </h3>
+              <p className="text-sm text-gray-600">
                 Try searching for reviews, properties, guests, or navigation
                 items
               </p>
@@ -261,13 +265,17 @@ export function GlobalSearchCommand({
                   <CommandItem
                     key={item.id}
                     onSelect={() => handleSelect(item)}
-                    className="flex items-center gap-3 p-3"
+                    className="flex items-center gap-3 p-3 hover:bg-blue-50 transition-colors duration-150 rounded-lg mx-2"
                   >
-                    {item.icon}
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      {item.icon}
+                    </div>
                     <div className="flex-1">
-                      <div className="font-medium">{item.title}</div>
+                      <div className="font-semibold text-gray-800">
+                        {item.title}
+                      </div>
                       {item.description && (
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-gray-600">
                           {item.description}
                         </div>
                       )}
@@ -285,17 +293,21 @@ export function GlobalSearchCommand({
                     <CommandItem
                       key={item.id}
                       onSelect={() => handleSelect(item)}
-                      className="flex items-center gap-3 p-3"
+                      className="flex items-center gap-3 p-3 hover:bg-green-50 transition-colors duration-150 rounded-lg mx-2"
                     >
-                      {item.icon}
+                      <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
+                        {item.icon}
+                      </div>
                       <div className="flex-1">
-                        <div className="font-medium">{item.title}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-semibold text-gray-800">
+                          {item.title}
+                        </div>
+                        <div className="text-sm text-gray-600">
                           {item.subtitle}
                         </div>
                       </div>
                       {item.metadata?.date && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-gray-500 font-medium">
                           {item.metadata.date}
                         </div>
                       )}
@@ -312,12 +324,16 @@ export function GlobalSearchCommand({
                     <CommandItem
                       key={item.id}
                       onSelect={() => handleSelect(item)}
-                      className="flex items-center gap-3 p-3"
+                      className="flex items-center gap-3 p-3 hover:bg-purple-50 transition-colors duration-150 rounded-lg mx-2"
                     >
-                      {item.icon}
+                      <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                        {item.icon}
+                      </div>
                       <div className="flex-1">
-                        <div className="font-medium">{item.title}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="font-semibold text-gray-800">
+                          {item.title}
+                        </div>
+                        <div className="text-sm text-gray-600">
                           {item.description}
                         </div>
                       </div>
@@ -339,32 +355,37 @@ export function GlobalSearchCommand({
                       <CommandItem
                         key={item.id}
                         onSelect={() => handleSelect(item)}
-                        className="flex items-start gap-3 p-3"
+                        className="flex items-start gap-3 p-4 hover:bg-blue-50 transition-colors duration-150 rounded-lg mx-2 border border-transparent hover:border-blue-200"
                       >
-                        {item.icon}
+                        <div className="p-2 bg-blue-100 rounded-lg shrink-0">
+                          {item.icon}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium">
+                          <div className="font-semibold text-gray-800">
                             {getHighlightedText(item.title, searchTerm)}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-gray-600 font-medium">
                             {getHighlightedText(
                               item.subtitle || "",
                               searchTerm,
                             )}
                           </div>
                           {item.description && (
-                            <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            <div className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
                               {getHighlightedText(item.description, searchTerm)}
                             </div>
                           )}
                           <div className="flex items-center gap-2 mt-2">
                             {item.badge && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-gray-300 bg-gray-50"
+                              >
                                 {item.badge}
                               </Badge>
                             )}
                             {item.metadata?.rating && (
-                              <div className="flex items-center gap-1 text-xs">
+                              <div className="flex items-center gap-1 text-xs font-semibold text-yellow-600">
                                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                 {item.metadata.rating.toFixed(1)}
                               </div>
@@ -386,7 +407,7 @@ export function GlobalSearchCommand({
                           </div>
                         </div>
                         {item.metadata?.date && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-gray-500 font-medium">
                             {item.metadata.date}
                           </div>
                         )}
