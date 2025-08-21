@@ -1,26 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import { Header } from "@/components/Header";
-import { useListings } from "@/hooks/use-listings";
 import { ListingsPageLoadingState } from "@/components/loading-states";
-import { Pagination, usePagination } from "@/components/ui/pagination";
-import { createListingSlug } from "@/lib/utils/slugs";
 import { MultiPropertyMap } from "@/components/ui/google-map";
-import { getAllPropertyLocations } from "@/lib/utils/locations";
-import { getMainPropertyImage, imageToProps } from "@/lib/utils/images";
+import { Pagination, usePagination } from "@/components/ui/pagination";
+import { useListings } from "@/hooks/use-listings";
+import { PAGINATION, RATINGS, TEXT_LIMITS } from "@/lib/constants";
 import {
-  formatDate,
-  renderStars,
-  truncateText,
   formatCount,
   formatRating,
+  renderStars,
+  truncateText,
 } from "@/lib/utils/formatting";
-import { PAGINATION, RATINGS, TEXT_LIMITS } from "@/lib/constants";
+import { getMainPropertyImage, imageToProps } from "@/lib/utils/images";
+import { getAllPropertyLocations } from "@/lib/utils/locations";
+import { createListingSlug } from "@/lib/utils/slugs";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Types for map synchronization
 interface MapBounds {
