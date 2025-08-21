@@ -143,13 +143,10 @@ export function useSeedingCache() {
   /**
    * Perform cache invalidation after any successful database operation
    */
-  const handleSuccessfulDatabaseOperation = useCallback(
-    async (operationType?: string) => {
-      // Invalidate cache after database operations
-      await invalidateAfterDatabaseOperation();
-    },
-    [invalidateAfterDatabaseOperation],
-  );
+  const handleSuccessfulDatabaseOperation = useCallback(async () => {
+    // Invalidate cache after database operations
+    await invalidateAfterDatabaseOperation();
+  }, [invalidateAfterDatabaseOperation]);
 
   return {
     handleSuccessfulSeed,

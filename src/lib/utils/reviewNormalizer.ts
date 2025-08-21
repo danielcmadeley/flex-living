@@ -1,30 +1,32 @@
-import { HostawayReview, NormalizedReview } from '../types/hostaway';
+import { HostawayReview, NormalizedReview } from "../types/hostaway";
 
-export function normalizeHostawayReview(review: HostawayReview): NormalizedReview {
+export function normalizeHostawayReview(
+  review: HostawayReview,
+): NormalizedReview {
   // Convert category ratings to object format
-  const categories: NormalizedReview['categories'] = {};
+  const categories: NormalizedReview["categories"] = {};
 
-  review.reviewCategory.forEach(cat => {
+  review.reviewCategory.forEach((cat) => {
     switch (cat.category) {
-      case 'cleanliness':
+      case "cleanliness":
         categories.cleanliness = cat.rating;
         break;
-      case 'communication':
+      case "communication":
         categories.communication = cat.rating;
         break;
-      case 'respect_house_rules':
+      case "respect_house_rules":
         categories.respect_house_rules = cat.rating;
         break;
-      case 'accuracy':
+      case "accuracy":
         categories.accuracy = cat.rating;
         break;
-      case 'location':
+      case "location":
         categories.location = cat.rating;
         break;
-      case 'check_in':
+      case "check_in":
         categories.check_in = cat.rating;
         break;
-      case 'value':
+      case "value":
         categories.value = cat.rating;
         break;
     }
@@ -39,56 +41,65 @@ export function normalizeHostawayReview(review: HostawayReview): NormalizedRevie
 
   return {
     id: review.id,
-    type: review.type as 'host-to-guest' | 'guest-to-host',
-    status: review.status as 'published' | 'pending' | 'draft',
+    type: review.type as "host-to-guest" | "guest-to-host",
+    status: review.status as "published" | "pending" | "draft",
     overallRating,
     comment: review.publicReview,
     categories,
     submittedAt: new Date(review.submittedAt),
     guestName: review.guestName,
     listingName: review.listingName,
-    channel: 'hostaway'
+    channel: "hostaway",
   };
 }
 
-export function normalizeHostawayReviews(reviews: HostawayReview[]): NormalizedReview[] {
-  return reviews.map(normalizeHostawayReview);
+export function groupReviewsByListing(
+  reviews: NormalizedReview[],
+): Record<string, NormalizedReview[]> {
+  return reviews.reduce(
+    (acc, review) => {
+      if (!acc[review.listingName]) {
+        acc[review.listingName] = [];
+      }
+      acc[review.listingName].push(review);
+      return acc;
+    },
+    {} as Record<string, NormalizedReview[]>,
+  );
 }
 
-export function groupReviewsByListing(reviews: NormalizedReview[]): Record<string, NormalizedReview[]> {
-  return reviews.reduce((acc, review) => {
-    if (!acc[review.listingName]) {
-      acc[review.listingName] = [];
-    }
-    acc[review.listingName].push(review);
-    return acc;
-  }, {} as Record<string, NormalizedReview[]>);
+export function groupReviewsByType(
+  reviews: NormalizedReview[],
+): Record<string, NormalizedReview[]> {
+  return reviews.reduce(
+    (acc, review) => {
+      if (!acc[review.type]) {
+        acc[review.type] = [];
+      }
+      acc[review.type].push(review);
+      return acc;
+    },
+    {} as Record<string, NormalizedReview[]>,
+  );
 }
 
-export function groupReviewsByType(reviews: NormalizedReview[]): Record<string, NormalizedReview[]> {
-  return reviews.reduce((acc, review) => {
-    if (!acc[review.type]) {
-      acc[review.type] = [];
-    }
-    acc[review.type].push(review);
-    return acc;
-  }, {} as Record<string, NormalizedReview[]>);
-}
-
-export function sortReviewsByDate(reviews: NormalizedReview[], order: 'asc' | 'desc' = 'desc'): NormalizedReview[] {
+export function sortReviewsByDate(
+  reviews: NormalizedReview[],
+  order: "asc" | "desc" = "desc",
+): NormalizedReview[] {
   return [...reviews].sort((a, b) => {
     const dateA = a.submittedAt.getTime();
     const dateB = b.submittedAt.getTime();
-    return order === 'desc' ? dateB - dateA : dateA - dateB;
+    return order === "desc" ? dateB - dateA : dateA - dateB;
   });
 }
 
 export function filterReviewsByDateRange(
   reviews: NormalizedReview[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): NormalizedReview[] {
-  return reviews.filter(review => {
+  return reviews.filter((review) => {
     const reviewDate = review.submittedAt;
     return reviewDate >= startDate && reviewDate <= endDate;
   });
@@ -103,14 +114,18 @@ export function calculateAverageRatings(reviews: NormalizedReview[]): {
   }
 
   // Calculate overall average
-  const reviewsWithRatings = reviews.filter(r => r.overallRating !== null);
-  const overallSum = reviewsWithRatings.reduce((sum, r) => sum + (r.overallRating || 0), 0);
-  const overall = reviewsWithRatings.length > 0 ? overallSum / reviewsWithRatings.length : 0;
+  const reviewsWithRatings = reviews.filter((r) => r.overallRating !== null);
+  const overallSum = reviewsWithRatings.reduce(
+    (sum, r) => sum + (r.overallRating || 0),
+    0,
+  );
+  const overall =
+    reviewsWithRatings.length > 0 ? overallSum / reviewsWithRatings.length : 0;
 
   // Calculate category averages
   const categoryTotals: Record<string, { sum: number; count: number }> = {};
 
-  reviews.forEach(review => {
+  reviews.forEach((review) => {
     Object.entries(review.categories).forEach(([category, rating]) => {
       if (rating !== undefined) {
         if (!categoryTotals[category]) {
@@ -122,16 +137,22 @@ export function calculateAverageRatings(reviews: NormalizedReview[]): {
     });
   });
 
-  const categories = Object.entries(categoryTotals).reduce((acc, [category, total]) => {
-    acc[category] = total.count > 0 ? total.sum / total.count : 0;
-    return acc;
-  }, {} as Record<string, number>);
+  const categories = Object.entries(categoryTotals).reduce(
+    (acc, [category, total]) => {
+      acc[category] = total.count > 0 ? total.sum / total.count : 0;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   return {
     overall: Math.round(overall * 10) / 10,
-    categories: Object.entries(categories).reduce((acc, [key, value]) => {
-      acc[key] = Math.round(value * 10) / 10;
-      return acc;
-    }, {} as Record<string, number>)
+    categories: Object.entries(categories).reduce(
+      (acc, [key, value]) => {
+        acc[key] = Math.round(value * 10) / 10;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
   };
 }

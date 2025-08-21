@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/utils/logger";
-import { API, ERROR_MESSAGES } from "@/lib/constants";
+import { API } from "@/lib/constants";
 import { withRateLimit } from "@/lib/rate-limit";
 
 // ============================================================================

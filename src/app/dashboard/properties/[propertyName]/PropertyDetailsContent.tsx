@@ -208,10 +208,7 @@ export function PropertyDetailsContent({
     return filtered;
   }, [propertyData, reviewFilters]);
 
-  const handleStatusChange = (
-    reviewId: number,
-    newStatus: "published" | "pending" | "draft",
-  ) => {
+  const handleStatusChange = () => {
     // Status change handled by ReviewStatusSelect component
   };
 

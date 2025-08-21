@@ -49,12 +49,15 @@ export class ReviewsQueries {
       // Apply pagination using type assertion to work around Drizzle TypeScript issues
       if (filters?.limit !== undefined) {
         if (filters?.offset !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           query = (query as any).limit(filters.limit).offset(filters.offset);
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           query = (query as any).limit(filters.limit);
         }
       } else if (filters?.offset !== undefined) {
         // If only offset is provided, we need to add a reasonable limit to avoid issues
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         query = (query as any).limit(1000).offset(filters.offset);
       }
 

@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   getDatabaseStatus,
   performSeedOperation,
-  validateSeedData,
   type DatabaseStatus,
 } from "@/lib/database-utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,11 +33,7 @@ interface SeedProgress {
 export function SeedPage() {
   const queryClient = useQueryClient();
   const [seedProgress, setSeedProgress] = useState<SeedProgress | null>(null);
-  const [customData, setCustomData] = useState("");
-  const [seedType, setSeedType] = useState<"sample" | "custom" | "file">(
-    "sample",
-  );
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastResult, setLastResult] = useState<{
@@ -126,42 +121,11 @@ export function SeedPage() {
   };
 
   const handleSeedDatabase = () => performDatabaseOperation("seed");
-  const handleForceSeed = () => performDatabaseOperation("force");
   const handleReseedDatabase = () => performDatabaseOperation("reseed");
 
   const seedResult = lastResult;
   const isSeeding = isLoading || seedProgress !== null;
   const isRefetching = queryClient.isFetching({ queryKey: ["reviews"] }) > 0;
-
-  const handleCustomSeed = async () => {
-    if (!customData.trim()) {
-      const errorMessage = "Please provide custom data to seed.";
-      toast.error(errorMessage);
-      return;
-    }
-
-    const validation = validateSeedData(customData);
-    if (!validation.valid) {
-      toast.error(validation.error || "Invalid data format");
-      return;
-    }
-
-    // For now, we'll use the force seed operation
-    // In a full implementation, you'd extend the API to handle custom data
-    await handleForceSeed();
-  };
-
-  const handleFileSeed = async () => {
-    if (!selectedFile) {
-      const errorMessage = "Please select a file to upload.";
-      toast.error(errorMessage);
-      return;
-    }
-
-    // For now, we'll use the regular seed operation
-    // In a full implementation, you'd parse the file and send its contents to the API
-    await handleForceSeed();
-  };
 
   const handleClearDatabase = async () => {
     if (
@@ -173,13 +137,6 @@ export function SeedPage() {
     }
 
     await performDatabaseOperation("clear");
-  };
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
   };
 
   return (

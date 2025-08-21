@@ -58,22 +58,6 @@ const IMAGE_CATEGORIES = {
   ],
 };
 
-// London neighborhood themes for more relevant images
-const NEIGHBORHOOD_THEMES = {
-  Marylebone: "elegant-london-apartment",
-  Bloomsbury: "classic-london-flat",
-  "Covent Garden": "central-london-studio",
-  "South Bank": "modern-london-apartment",
-  Chelsea: "luxury-london-home",
-  Shoreditch: "trendy-london-loft",
-  Kensington: "prestigious-london-flat",
-  Greenwich: "historic-london-townhouse",
-  "Canary Wharf": "modern-london-apartment",
-  Camden: "vibrant-london-studio",
-  "Notting Hill": "stylish-london-penthouse",
-  Hampstead: "peaceful-london-garden-flat",
-};
-
 /**
  * Determines property type from property name
  */
@@ -234,13 +218,4 @@ export function getCachedPropertyImages(
   const images = generatePropertyImages(propertyName);
   imageCache.set(propertyName, images);
   return images;
-}
-
-/**
- * Pre-loads images for multiple properties (useful for listings page)
- */
-export function preloadPropertyImages(propertyNames: string[]): void {
-  propertyNames.forEach((name) => {
-    getCachedPropertyImages(name);
-  });
 }

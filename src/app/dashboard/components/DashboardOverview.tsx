@@ -13,8 +13,7 @@ import {
 import { useReviewsWithStats } from "@/hooks/use-reviews";
 
 export function DashboardOverview() {
-  const { reviews, statistics, isLoading, isFetching, isError } =
-    useReviewsWithStats();
+  const { reviews, statistics, isLoading, isError } = useReviewsWithStats();
 
   if (isLoading && !reviews.length) {
     return (

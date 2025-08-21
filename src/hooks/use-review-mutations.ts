@@ -110,12 +110,7 @@ export function useUpdateReviewStatus() {
       context: MutationContext | undefined,
     ) => {
       // Log error details for debugging
-      const errorDetails = {
-        error: error.message,
-        reviewId: variables.reviewId,
-        attemptedStatus: variables.status,
-        timestamp: new Date().toISOString(),
-      };
+
       // Error logged to console in development mode only
 
       // Revert optimistic updates on error

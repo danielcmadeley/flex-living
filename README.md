@@ -1,294 +1,188 @@
-# Flex Living Reviews Dashboard
+Flex Living Reviews Dashboard — Developer Guide (v0.1.0)
 
-A comprehensive reviews management system for Flex Living properties, integrating Hostaway and Google Reviews APIs to provide managers with actionable insights and control over public review displays.
+I built this system to pull reviews from Hostaway and Google Places, clean them into a single format, and give managers control over which reviews get published on property pages. Managers see everything in a moderation dashboard; only approved reviews make it out to the public.
 
-## 🚀 Tech Stack
+Think of it as a reputation control center for Flex Living.
 
-### Core Framework
-- **Next.js 15** - Full-stack React framework with App Router
-- **TypeScript** - Type-safe development with strict mode enabled
-- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+1) Getting It Running Locally
+You’ll Need
 
-### Database & Backend
-- **Supabase** - PostgreSQL database with real-time capabilities
-- **Drizzle ORM** - Type-safe database queries and migrations
-- **Zod** - Runtime type validation and schema parsing
+Node.js 18+
 
-### State Management & Data Fetching
-- **Zustand** - Lightweight state management with Immer for immutable updates
-- **TanStack Query (React Query)** - Server state management with caching
-- **TanStack Table** - Powerful table component for data display
+pnpm
 
-### UI Components
-- **Radix UI** - Accessible component primitives
-- **Lucide React** - Modern icon library
-- **Custom Component Library** - Built on top of Radix with Tailwind styling
+A Supabase project (or any Postgres DB if you’re just experimenting)
 
-### API Integration
-- **Hostaway API** - Property management and review data
-- **Google Places API** - Google Reviews integration
-- **Rate Limiting** - Custom middleware for API protection
+Google Cloud account with Places API enabled
 
-## 🏗️ Architecture Overview
+Hostaway API credentials
 
-### Project Structure
-```
-src/
-├── app/                    # Next.js App Router pages and API routes
-│   ├── api/reviews/       # API endpoints for review data
-│   ├── dashboard/         # Manager dashboard interface
-│   └── listings/          # Public property pages
-├── components/            # Reusable UI components
-├── db/                   # Database schema and queries
-├── hooks/                # Custom React hooks
-├── lib/                  # Utilities, constants, and configurations
-└── stores/               # Zustand state management
-```
+(Optional) Upstash Redis for rate limiting
 
-### Data Flow Architecture
+Environment
 
-1. **Data Sources** → Multiple review sources (Hostaway, Google Reviews)
-2. **API Layer** → Normalization and validation (`/api/reviews/*`)
-3. **State Management** → Zustand stores with TanStack Query caching
-4. **UI Components** → React components with TypeScript interfaces
-5. **Database** → Supabase PostgreSQL with Drizzle ORM
+I keep my config in .env.local:
 
-### Key Architectural Decisions
+DATABASE_URL="postgresql://user:pass@host:5432/db"
 
-**1. API-First Design**
-- Centralized review normalization in `/api/reviews/hostaway` and `/api/reviews/google`
-- Consistent data structure across different review sources
-- Rate limiting and error handling at the API level
+NEXT_PUBLIC_SUPABASE_URL="https://<project>.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>"
 
-**2. Component Composition**
-- Modular components with single responsibility principle
-- Compound component patterns for complex UI elements
-- Separation of client and server components
+GOOGLE_PLACES_API_KEY="<key>"
 
-**3. Type Safety**
-- Zod schemas for runtime validation
-- TypeScript interfaces for compile-time safety
-- End-to-end type safety from database to UI
+HOSTAWAY_CLIENT_ID="<id>"
+HOSTAWAY_CLIENT_SECRET="<secret>"
 
-## 🔗 Google Reviews Integration
+# Optional: rate limiting
+UPSTASH_REDIS_REST_URL="https://<id>.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="<token>"
 
-### Implementation Overview
+Bootstrapping
+pnpm install
+pnpm db:generate   # generate SQL from schema
+pnpm db:migrate    # apply migrations
+pnpm dev           # start on http://localhost:3000
 
-The Google Reviews integration uses the Google Places API to fetch authentic guest reviews for properties. This provides managers with a complete view of their property's reputation across all platforms.
 
-### Technical Implementation
+/dashboard/seed → fake data for testing
 
-**1. API Configuration**
-```typescript
-// Google Place IDs mapped to properties
-const GOOGLE_PLACE_IDS: Record<string, string> = {
-  "Property Name": "ChIJB9OTMDIbdkgRp0JWbQGZsS8",
-  // ... other properties
+/dashboard → moderation dashboard
+
+/listings → public property pages
+
+Production
+pnpm build
+pnpm start
+
+
+On deployment (Vercel works fine), I just set the same env vars in the hosting platform.
+
+2) Tech Choices and Why I Picked Them
+
+Next.js 15 + React 19 → future-proof with App Router and server components.
+
+Tailwind v4 → import-only, zero-config styling.
+
+Supabase + Drizzle ORM → Postgres I can trust, migrations I can control.
+
+Zod → every boundary has runtime validation. I sleep better.
+
+TanStack Query + Zustand → Query handles async state and retries; Zustand covers light UI state like filters.
+
+Radix UI + Lucide + next-themes → consistent UI, theming, and accessibility without fuss.
+
+Upstash Ratelimit → Google won’t eat my budget.
+
+Vitest + Testing Library + MSW → fast tests with good API mocking.
+
+The theme: type-safety, low maintenance, and guardrails against external APIs misbehaving.
+
+3) How the Data Flows
+
+Hostaway and Google reviews come in.
+
+I run them through API routes that normalise everything into a single Review schema.
+
+Google responses are cached for 6 hours to keep costs down.
+
+Zustand and TanStack Query drive the dashboard state.
+
+Supabase/Postgres keeps track of moderation state (published|pending|draft).
+
+Everything that crosses the boundary goes through Zod schemas so I’m never working with unknown shapes.
+
+4) API Behaviour in Practice
+
+/api/reviews/hostaway → talks to Hostaway, with filters like status, listingName, limit.
+
+/api/reviews/google → wraps Google Places “Place Details.” Usually only ~5 reviews max per property (Google limitation).
+
+/api/reviews/combined/[propertyName] → merges both, dedupes, and sorts newest first.
+
+Everything returns a standard Review object:
+
+type Review = {
+  id: string;
+  source: "hostaway" | "google";
+  externalId: string;
+  propertyName: string;
+  rating: number; // 1–5
+  text: string;
+  author?: { name?: string; avatarUrl?: string };
+  createdAt: string;
+  status: "published" | "pending" | "draft";
 };
 
-// API endpoint: /api/reviews/google
-```
 
-**2. Review Normalization**
-- Transforms Google's review format into our standard schema
-- Handles multiple languages and translations
-- Preserves original timestamps and author information
+If I see 429, it means the rate limiter kicked in. If I see 502, it usually means Google or Hostaway had a bad day.
 
-**3. Data Merging**
-- Combines Google Reviews with Hostaway data
-- Unified interface in the dashboard
-- Source attribution for transparency
+5) Google Reviews: What I Learned
 
-### Google Places API Costs & Considerations
+Cost: A Place Details call is about $17 per 1,000. Google forces a $200/month minimum if I go beyond free credits.
 
-#### 💰 Cost Structure (as of 2024)
-- **Places API - Place Details**: $17 per 1,000 requests
-- **Reviews are included** in Place Details requests
-- **Minimum charge**: $200/month credit requirement
-- **Request optimization**: Cached responses reduce API calls
+Limits: The API only gives me around 5 reviews per property. Updates aren’t real-time.
 
-#### Cost Optimization Strategies Implemented
-1. **Smart Caching**: 6-hour cache for review data to minimize API calls
-2. **Selective Updates**: Only fetch when property data changes
-3. **Batch Processing**: Group requests for multiple properties
-4. **Error Handling**: Graceful fallbacks to prevent unnecessary retries
+Caching: I cache results for 6 hours. If I need fresh data, I can hit refresh=true — but I do this sparingly.
 
-#### 🚨 Drawbacks & Limitations
+Moderation: I can’t filter Google reviews upstream. The dashboard decides whether they get published.
 
-**1. Cost Implications**
-- **High per-request cost**: $17/1000 requests can scale quickly
-- **Monthly minimum**: $200 commitment regardless of usage
-- **Scaling concerns**: Costs grow linearly with property portfolio
+Bottom line: Google reviews add context but aren’t the full story. I treat Hostaway as the primary source.
 
-**2. API Limitations**
-- **5 reviews maximum** per property in most cases
-- **No real-time updates**: Reviews may be delayed
-- **Rate limiting**: 100 requests per 100 seconds per user
-- **Geographic restrictions**: Some regions have limited data
+6) Day-to-Day Development
 
-**3. Technical Challenges**
-- **API key management**: Requires secure key rotation
-- **Quota management**: Risk of hitting daily/monthly limits
-- **Error handling**: API downtime affects review display
-- **Data consistency**: Google's review sorting may change
+I rely on these scripts:
 
-**4. Business Considerations**
-- **Limited control**: Cannot filter or moderate Google reviews
-- **Review authenticity**: Potential for fake or biased reviews
-- **Competitor visibility**: Public reviews visible to competition
-- **Response management**: Requires separate Google My Business setup
+pnpm dev              # run locally
+pnpm db:studio        # open Drizzle Studio
+pnpm seed             # populate fake data
+pnpm test             # run tests
+pnpm test:rate-limit  # exercise the 429 logic
 
-### Alternative Approaches Considered
 
-**1. Web Scraping** (Not Recommended)
-- Violates Google's Terms of Service
-- Unreliable due to anti-bot measures
-- Legal and ethical concerns
+Code lives in predictable places:
 
-**2. Third-party Services**
-- Higher costs but simpler implementation
-- Less control over data and caching
-- Additional vendor dependency
+src/components → Radix-based UI
 
-**3. Google My Business API** (Limited)
-- Only works for business-owned properties
-- Requires business verification
-- Limited review data access
+src/app/api/reviews → API routes
 
-## 🛠️ Key Features Implemented
+src/stores → Zustand state
 
-### Manager Dashboard
-- **Multi-view Interface**: Grid and table views for different use cases
-- **Advanced Filtering**: By property, rating, status, date range, and source
-- **Bulk Operations**: Mass status updates for review management
-- **Real-time Search**: Instant filtering across all review content
-- **Statistics Dashboard**: Performance metrics and trend analysis
+Tests use Vitest + Testing Library + MSW (mock APIs instead of hitting Google/Hostaway directly).
 
-### Review Management
-- **Status Control**: Published/Pending/Draft workflow
-- **Source Integration**: Unified view of Hostaway and Google reviews
-- **Quality Indicators**: Rating distributions and category breakdowns
-- **Export Capabilities**: Data export for reporting and analysis
+7) Security and Ops
 
-### Public Display
-- **Approved Reviews Only**: Only published reviews appear on property pages
-- **Source Attribution**: Clear indication of review origin
-- **Responsive Design**: Optimized for all device sizes
-- **Performance Optimized**: Cached data and lazy loading
+API keys stay server-side. I never expose them to the client.
 
-## 🚀 Getting Started
+CORS is restricted to known origins.
 
-### Prerequisites
-- Node.js 18+ and pnpm
-- Supabase account and project
-- Google Cloud Platform account (for Places API)
+Everything goes through Zod validation.
 
-### Environment Variables
-```bash
-# Database
-DATABASE_URL="postgresql://..."
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+Upstash rate limits make sure one property refresh loop doesn’t drain the budget.
 
-# Google Places API
-GOOGLE_PLACES_API_KEY="AIza..."
+I set up budget alerts in GCP because Google billing surprises are no joke.
 
-# Hostaway API
-HOSTAWAY_CLIENT_ID="your-client-id"
-HOSTAWAY_CLIENT_SECRET="your-client-secret"
-```
+8) What’s Next
 
-### Installation & Setup
-```bash
-# Install dependencies
-pnpm install
+Auto-response templates for managers.
 
-# Run database migrations
-pnpm db:push
+Sentiment analysis for trends.
 
-# Seed development data
-pnpm dev
-# Navigate to /dashboard/seed to populate sample data
+Proper multi-language support.
 
-# Start development server
-pnpm dev
-```
+Event-driven sync once the property list grows.
 
-### Production Deployment
-```bash
-# Build for production
-pnpm build
+TL;DR
 
-# Start production server
-pnpm start
-```
+The system is designed to be type-safe, cost-aware, and resilient to flaky APIs. If something breaks, I first check:
 
-## 📊 Performance & Monitoring
+My env vars
 
-### Built-in Features
-- **Rate Limiting**: Prevents API abuse and manages costs
-- **Error Boundaries**: Graceful error handling in UI
-- **Loading States**: Skeleton screens and progressive loading
-- **Caching Strategy**: Multiple levels of data caching
+DB migrations
 
-### Monitoring Recommendations
-- Monitor Google API usage and costs in Google Cloud Console
-- Track review fetch failures and implement alerting
-- Monitor database performance for large datasets
-- Set up cost alerts for API usage spikes
+Hostaway/Google credentials
 
-## 🔒 Security Considerations
+Whether I hit the rate limiter
 
-- **API Key Protection**: Server-side only API key usage
-- **Rate Limiting**: Prevents abuse and controls costs
-- **Input Validation**: Zod schemas validate all inputs
-- **Authentication**: Supabase auth integration
-- **CORS Configuration**: Restricted origin policies
+And yes — I’ve already blown past the free Google quota once. Don’t repeat my mistake.
 
-## 🎯 Future Enhancements
-
-### Planned Features
-- **Automated Review Responses**: Template-based response system
-- **Advanced Analytics**: Sentiment analysis and trend prediction
-- **Multi-language Support**: Automated translation capabilities
-- **Review Aggregation**: Industry benchmarking and competitor analysis
-
-### Scalability Considerations
-- **Microservice Architecture**: Split review sources into separate services
-- **Event-driven Updates**: Real-time review synchronization
-- **CDN Integration**: Global content distribution
-- **Database Sharding**: Handle large-scale property portfolios
-
----
-
-## 📝 API Documentation
-
-### Hostaway Reviews Endpoint
-```
-GET /api/reviews/hostaway
-Query Parameters:
-- status: published|pending|draft
-- listingName: string
-- includeStats: boolean
-- limit: number
-- sortOrder: asc|desc
-```
-
-### Google Reviews Endpoint
-```
-GET /api/reviews/google
-Query Parameters:
-- propertyName: string
-- language: string (optional)
-- refresh: boolean (force cache refresh)
-```
-
-### Combined Reviews Endpoint
-```
-GET /api/reviews/combined/[propertyName]
-Returns: Merged Hostaway and Google reviews for a property
-```
-
----
-
-**Built with ❤️ for Flex Living property management**
+Built with ❤️, but also with guardrails, so you don’t burn money or sanity when fetching reviews.

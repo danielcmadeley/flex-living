@@ -15,10 +15,9 @@ import {
 } from "lucide-react";
 
 export function HomePage() {
-  const { reviews, statistics, isLoading, isFetching, isError, error } =
-    useReviews({
-      includeStats: true,
-    });
+  const { reviews, statistics, isLoading, isError, error } = useReviews({
+    includeStats: true,
+  });
 
   if (isError) {
     return (

@@ -39,21 +39,6 @@ export function formatDateShort(date: Date | string): string {
  * @param date - The date to format
  * @returns Relative time string (e.g., "2 days ago", "1 month ago")
  */
-export function formatRelativeTime(date: Date | string): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  const now = new Date();
-  const diffInMs = now.getTime() - dateObj.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays === 0) return "Today";
-  if (diffInDays === 1) return "Yesterday";
-  if (diffInDays < 7) return `${diffInDays} days ago`;
-  if (diffInDays < 30)
-    return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? "s" : ""} ago`;
-  if (diffInDays < 365)
-    return `${Math.floor(diffInDays / 30)} month${Math.floor(diffInDays / 30) > 1 ? "s" : ""} ago`;
-  return `${Math.floor(diffInDays / 365)} year${Math.floor(diffInDays / 365) > 1 ? "s" : ""} ago`;
-}
 
 /**
  * Configuration for star rating display
@@ -143,9 +128,6 @@ export function renderStars(
  * @param rating - Rating on a 10-point scale
  * @returns Rating on a 5-star scale
  */
-export function convertToFiveStarRating(rating: number): number {
-  return rating / 2;
-}
 
 /**
  * Formats a rating with appropriate decimal places
@@ -196,11 +178,3 @@ export function truncateText(
  * @param decimals - Number of decimal places
  * @returns Formatted percentage string
  */
-export function formatPercentage(
-  value: number,
-  isDecimal: boolean = true,
-  decimals: number = 0,
-): string {
-  const percentage = isDecimal ? value * 100 : value;
-  return `${percentage.toFixed(decimals)}%`;
-}

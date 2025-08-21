@@ -29,25 +29,25 @@ export const RATINGS = {
 // ============================================================================
 export const DATE_FORMATS = {
   DISPLAY: {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   } as const,
   DISPLAY_SHORT: {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   } as const,
   TIME: {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
   } as const,
   DATETIME: {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   } as const,
 } as const;
 
@@ -77,22 +77,23 @@ export const API = {
 // Query Keys
 // ============================================================================
 export const QUERY_KEYS = {
-  REVIEWS: ['reviews'] as const,
-  LISTINGS: ['listings'] as const,
-  FEATURED_LISTINGS: ['listings', 'featured'] as const,
-  LISTING_DETAILS: (slug: string) => ['listings', slug] as const,
-  GOOGLE_REVIEWS: (propertyName: string) => ['google-reviews', propertyName] as const,
-  STATISTICS: ['statistics'] as const,
-  SEED_STATUS: ['seed', 'status'] as const,
+  REVIEWS: ["reviews"] as const,
+  LISTINGS: ["listings"] as const,
+  FEATURED_LISTINGS: ["listings", "featured"] as const,
+  LISTING_DETAILS: (slug: string) => ["listings", slug] as const,
+  GOOGLE_REVIEWS: (propertyName: string) =>
+    ["google-reviews", propertyName] as const,
+  STATISTICS: ["statistics"] as const,
+  SEED_STATUS: ["seed", "status"] as const,
 } as const;
 
 // ============================================================================
 // Review Status
 // ============================================================================
 export const REVIEW_STATUS = {
-  PUBLISHED: 'published',
-  PENDING: 'pending',
-  DRAFT: 'draft',
+  PUBLISHED: "published",
+  PENDING: "pending",
+  DRAFT: "draft",
 } as const;
 
 export type ReviewStatus = (typeof REVIEW_STATUS)[keyof typeof REVIEW_STATUS];
@@ -101,8 +102,8 @@ export type ReviewStatus = (typeof REVIEW_STATUS)[keyof typeof REVIEW_STATUS];
 // Review Types
 // ============================================================================
 export const REVIEW_TYPE = {
-  HOST_TO_GUEST: 'host-to-guest',
-  GUEST_TO_HOST: 'guest-to-host',
+  HOST_TO_GUEST: "host-to-guest",
+  GUEST_TO_HOST: "guest-to-host",
 } as const;
 
 export type ReviewType = (typeof REVIEW_TYPE)[keyof typeof REVIEW_TYPE];
@@ -134,43 +135,43 @@ export const VALIDATION = {
 // Error Messages
 // ============================================================================
 export const ERROR_MESSAGES = {
-  GENERIC: 'An unexpected error occurred. Please try again.',
-  NETWORK: 'Network error. Please check your connection and try again.',
-  NOT_FOUND: 'The requested resource was not found.',
-  UNAUTHORIZED: 'You are not authorized to perform this action.',
-  VALIDATION: 'Please check your input and try again.',
-  RATE_LIMIT: 'Too many requests. Please try again later.',
-  SERVER_ERROR: 'Server error. Please try again later.',
+  GENERIC: "An unexpected error occurred. Please try again.",
+  NETWORK: "Network error. Please check your connection and try again.",
+  NOT_FOUND: "The requested resource was not found.",
+  UNAUTHORIZED: "You are not authorized to perform this action.",
+  VALIDATION: "Please check your input and try again.",
+  RATE_LIMIT: "Too many requests. Please try again later.",
+  SERVER_ERROR: "Server error. Please try again later.",
 } as const;
 
 // ============================================================================
 // Success Messages
 // ============================================================================
 export const SUCCESS_MESSAGES = {
-  REVIEW_CREATED: 'Review created successfully',
-  REVIEW_UPDATED: 'Review updated successfully',
-  REVIEW_DELETED: 'Review deleted successfully',
-  STATUS_UPDATED: 'Status updated successfully',
-  DATA_LOADED: 'Data loaded successfully',
-  LOGOUT: 'Logged out successfully',
+  REVIEW_CREATED: "Review created successfully",
+  REVIEW_UPDATED: "Review updated successfully",
+  REVIEW_DELETED: "Review deleted successfully",
+  STATUS_UPDATED: "Status updated successfully",
+  DATA_LOADED: "Data loaded successfully",
+  LOGOUT: "Logged out successfully",
 } as const;
 
 // ============================================================================
 // Routes
 // ============================================================================
 export const ROUTES = {
-  HOME: '/',
-  LISTINGS: '/listings',
+  HOME: "/",
+  LISTINGS: "/listings",
   LISTING_DETAILS: (slug: string) => `/listings/${slug}` as const,
-  DASHBOARD: '/dashboard',
-  DASHBOARD_PROPERTIES: '/dashboard/properties',
-  DASHBOARD_SEED: '/dashboard/seed',
-  LOGIN: '/login',
+  DASHBOARD: "/dashboard",
+  DASHBOARD_PROPERTIES: "/dashboard/properties",
+  DASHBOARD_SEED: "/dashboard/seed",
+  LOGIN: "/login",
   API: {
-    REVIEWS: '/api/reviews',
-    GOOGLE_REVIEWS: '/api/reviews/google',
-    HOSTAWAY_REVIEWS: '/api/reviews/hostaway',
-    SEED: '/api/seed',
+    REVIEWS: "/api/reviews",
+    GOOGLE_REVIEWS: "/api/reviews/google",
+    HOSTAWAY_REVIEWS: "/api/reviews/hostaway",
+    SEED: "/api/seed",
   },
 } as const;
 
@@ -178,12 +179,7 @@ export const ROUTES = {
 // Feature Flags
 // ============================================================================
 export const FEATURES = {
-  ENABLE_GOOGLE_REVIEWS: true,
-  ENABLE_BULK_ACTIONS: true,
-  ENABLE_ANALYTICS: false,
-  ENABLE_EXPORT: true,
-  ENABLE_IMPORT: false,
-  SHOW_DEBUG_INFO: process.env.NODE_ENV === 'development',
+  SHOW_DEBUG_INFO: process.env.NODE_ENV === "development",
 } as const;
 
 // ============================================================================
