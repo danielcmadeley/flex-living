@@ -394,17 +394,17 @@ export default function ListingsPage() {
 
           <div className="space-y-6 text-gray-700 leading-relaxed">
             <p>
-              London's moods shift by neighbourhood—Regency terraces in Primrose
-              Hill, riverside warehouses in Wapping, jazz-filled cellars in Soho
-              - so choosing the right furnished apartment for rent in London
-              shapes your whole experience. The Flex makes that choice simple
-              with a hand-picked range that spans bright studios near Liverpool
-              Street for consultants on tight timelines, calm one-beds in
-              Battersea for remote workers, and larger homes in leafy Highgate
-              for families settling in for a season. Whether your agenda calls
-              for a short term flat rental in London, a flexible monthly rental
-              in London or a longer serviced stay, you'll find a space that
-              feels like home from the moment the key turns.
+              London&apos;s moods shift by neighbourhood—Regency terraces in
+              Primrose Hill, riverside warehouses in Wapping, jazz-filled
+              cellars in Soho - so choosing the right furnished apartment for
+              rent in London shapes your whole experience. The Flex makes that
+              choice simple with a hand-picked range that spans bright studios
+              near Liverpool Street for consultants on tight timelines, calm
+              one-beds in Battersea for remote workers, and larger homes in
+              leafy Highgate for families settling in for a season. Whether your
+              agenda calls for a short term flat rental in London, a flexible
+              monthly rental in London or a longer serviced stay, you&apos;ll
+              find a space that feels like home from the moment the key turns.
             </p>
 
             <p>
@@ -415,9 +415,9 @@ export default function ListingsPage() {
               evolving? Your stay can glide into a longer short-term lease in
               London without the chaos of moving or broker fees, letting you
               extend that Thames-side chapter as long as opportunity knocks.
-              With The Flex behind the door - no matter the postcode - you're
-              free to script a London life that changes as quickly as the city
-              itself.
+              With The Flex behind the door - no matter the postcode -
+              you&apos;re free to script a London life that changes as quickly
+              as the city itself.
             </p>
           </div>
         </div>
@@ -467,13 +467,14 @@ export default function ListingsPage() {
               className="border border-gray-200 rounded-lg px-6"
             >
               <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
-                What is included in The Flex's serviced apartments in London?
+                What is included in The Flex&apos;s serviced apartments in
+                London?
               </AccordionTrigger>
               <AccordionContent className="text-gray-700 pb-6">
                 Every Flex apartment comes fully equipped with utilities,
                 high-speed Wi-Fi, a complete kitchen with appliances and
                 cookware, premium linens and towels, weekly housekeeping, and
-                24/7 local support. You'll also have access to laundry
+                24/7 local support. You&apos;ll also have access to laundry
                 facilities, and many properties include additional amenities
                 like gyms, concierge services, and communal spaces.
               </AccordionContent>

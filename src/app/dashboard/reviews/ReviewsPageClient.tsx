@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
 import { DashboardSidebar } from "../components/DashboardSidebar";
 import { ReviewsPage } from "../pages/ReviewsPage";
@@ -25,7 +24,7 @@ export function ReviewsPageClient({ user }: ReviewsPageClientProps) {
 
   return (
     <DashboardSidebar user={user} reviews={reviews}>
-      <ReviewsPage user={user} />
+      <ReviewsPage />
 
       {/* Toast notifications */}
       {uiState.toast && (

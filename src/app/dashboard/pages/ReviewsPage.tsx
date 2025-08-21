@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { User } from "@supabase/supabase-js";
+
 import { useReviews } from "@/hooks/use-reviews";
 import { DashboardFilters } from "../components/DashboardFilters";
 import { ReviewsTable } from "../components/ReviewsTable";
@@ -12,11 +12,7 @@ import { useFilters, useUIState, useUIActions } from "@/stores/dashboard-store";
 import { SUCCESS_MESSAGES } from "@/lib/constants";
 import { logger } from "@/lib/utils/logger";
 
-interface ReviewsPageProps {
-  user: User;
-}
-
-export function ReviewsPage({ user }: ReviewsPageProps) {
+export function ReviewsPage() {
   // Zustand store hooks
   const filters = useFilters();
   const uiState = useUIState();
