@@ -49,15 +49,12 @@ export default function ListingPage() {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [showBookingWidget, setShowBookingWidget] = useState(false);
   const [selectedDates, setSelectedDates] = useState({
     checkIn: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
     checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Day after tomorrow
   });
   const [guests, setGuests] = useState(1);
   const [couponCode, setCouponCode] = useState("");
-
-  const aboutSectionRef = useRef<HTMLDivElement>(null);
 
   // Fetch combined reviews for this specific listing
   const {
@@ -149,21 +146,6 @@ export default function ListingPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showImageModal, propertyImages.length]);
 
-  // Scroll detection for booking widget
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!aboutSectionRef.current) return;
-
-      const aboutRect = aboutSectionRef.current.getBoundingClientRect();
-      const isAboutVisible = aboutRect.top <= 100; // Show when about section is near top
-
-      setShowBookingWidget(isAboutVisible);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const formatDateLong = (date: Date | string) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -227,7 +209,7 @@ export default function ListingPage() {
   const content = (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="max-w-6xl mx-auto w-full px-6 flex-1">
+      <div className="max-w-7xl mx-auto w-full px-6 flex-1">
         {/* Breadcrumb Navigation */}
         <div className="py-6">
           <Breadcrumb
@@ -530,10 +512,7 @@ export default function ListingPage() {
             </div>
 
             {/* 3. About This Property */}
-            <div
-              ref={aboutSectionRef}
-              className="flex flex-col bg-white rounded-lg border p-6 relative"
-            >
+            <div className="flex flex-col bg-white rounded-lg border p-6 relative">
               <h2 className="text-2xl font-semibold mb-4">
                 About This Property
               </h2>
@@ -596,525 +575,653 @@ export default function ListingPage() {
               </div>
             </div>
 
-            {/* 4. Amenities */}
-            <div className="flex flex-col bg-white rounded-lg border p-6">
-              <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
+            {/* Main Content with Sticky Booking Widget */}
+            <div className="flex flex-col lg:flex-row gap-6">
+              {/* Left Column - Main Content */}
+              <div className="flex-1 space-y-6">
+                {/* 4. Amenities */}
+                <div className="flex flex-col bg-white rounded-lg border p-6">
+                  <h2 className="text-2xl font-semibold mb-4">Amenities</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Essential Amenities
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Free high-speed WiFi throughout</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Fully equipped modern kitchen</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Washing machine & dryer</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Air conditioning & heating</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Smart TV with streaming services</span>
-                    </li>
-                  </ul>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Essential Amenities
+                      </h3>
+                      <ul className="space-y-2">
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Free high-speed WiFi throughout</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Fully equipped modern kitchen</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Washing machine & dryer</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Air conditioning & heating</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Smart TV with streaming services</span>
+                        </li>
+                      </ul>
+                    </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Comfort & Convenience
-                  </h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Premium bedding & linens</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Professional housekeeping</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>24/7 guest support</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Secure building access</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <span className="text-green-600">✓</span>
-                      <span>Concierge services available</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-blue-600">ℹ️</span>
-                  <span className="font-medium text-blue-900">
-                    Special Features
-                  </span>
-                </div>
-                <p className="text-blue-800 text-sm">
-                  This property includes premium amenities and services that set
-                  it apart from standard accommodations. Our attention to detail
-                  ensures a luxury experience throughout your stay.
-                </p>
-              </div>
-            </div>
-
-            {/* 5. Stay Policies */}
-            <div className="flex flex-col bg-white rounded-lg border p-6">
-              <h2 className="text-2xl font-semibold mb-4">Stay Policies</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Check-in & Check-out
-                  </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li>
-                      <strong>Check-in:</strong> 3:00 PM - 10:00 PM
-                    </li>
-                    <li>
-                      <strong>Check-out:</strong> Before 11:00 AM
-                    </li>
-                    <li>
-                      <strong>Late check-in:</strong> Available with prior
-                      notice
-                    </li>
-                    <li>
-                      <strong>Early check-in:</strong> Subject to availability
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Guest Guidelines
-                  </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li>
-                      <strong>Maximum guests:</strong> As per booking capacity
-                    </li>
-                    <li>
-                      <strong>Age requirement:</strong> 21+ for primary guest
-                    </li>
-                    <li>
-                      <strong>Smoking:</strong> Non-smoking property
-                    </li>
-                    <li>
-                      <strong>Parties/Events:</strong> Not permitted
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  House Rules
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      Quiet Hours
-                    </h4>
-                    <p className="text-sm text-gray-700">
-                      Please respect quiet hours from 10:00 PM to 8:00 AM to
-                      ensure all guests can enjoy a peaceful stay.
-                    </p>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Comfort & Convenience
+                      </h3>
+                      <ul className="space-y-2">
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Premium bedding & linens</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Professional housekeeping</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>24/7 guest support</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Secure building access</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <span className="text-green-600">✓</span>
+                          <span>Concierge services available</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      Property Care
-                    </h4>
-                    <p className="text-sm text-gray-700">
-                      Please treat the property with care. Any damages will be
-                      assessed and charged accordingly.
+
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-blue-600">ℹ️</span>
+                      <span className="font-medium text-blue-900">
+                        Special Features
+                      </span>
+                    </div>
+                    <p className="text-blue-800 text-sm">
+                      This property includes premium amenities and services that
+                      set it apart from standard accommodations. Our attention
+                      to detail ensures a luxury experience throughout your
+                      stay.
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 6. Cancellation Policy */}
-            <div className="flex flex-col bg-white rounded-lg border p-6">
-              <h2 className="text-2xl font-semibold mb-4">
-                Cancellation Policy
-              </h2>
+                {/* 5. Stay Policies */}
+                <div className="flex flex-col bg-white rounded-lg border p-6">
+                  <h2 className="text-2xl font-semibold mb-4">Stay Policies</h2>
 
-              <div className="mb-6">
-                <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
-                  Flexible Cancellation Policy
-                </div>
-                <p className="text-gray-700 leading-relaxed">
-                  We understand that travel plans can change. Our flexible
-                  cancellation policy is designed to give you peace of mind when
-                  booking your stay.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Cancellation Terms
-                  </h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <span className="text-green-600 mt-1">✓</span>
-                      <div>
-                        <div className="font-medium">Free cancellation</div>
-                        <div className="text-sm text-gray-600">
-                          Up to 24 hours before check-in
-                        </div>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-yellow-600 mt-1">⚠</span>
-                      <div>
-                        <div className="font-medium">Partial refund</div>
-                        <div className="text-sm text-gray-600">
-                          Less than 24 hours: 50% refund
-                        </div>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="text-red-600 mt-1">✗</span>
-                      <div>
-                        <div className="font-medium">No refund</div>
-                        <div className="text-sm text-gray-600">
-                          No-show or same-day cancellation
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Important Notes
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Special Circumstances:</strong> We may offer
-                        additional flexibility for medical emergencies or
-                        extraordinary circumstances.
-                      </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Check-in & Check-out
+                      </h3>
+                      <ul className="space-y-2 text-gray-700">
+                        <li>
+                          <strong>Check-in:</strong> 3:00 PM - 10:00 PM
+                        </li>
+                        <li>
+                          <strong>Check-out:</strong> Before 11:00 AM
+                        </li>
+                        <li>
+                          <strong>Late check-in:</strong> Available with prior
+                          notice
+                        </li>
+                        <li>
+                          <strong>Early check-in:</strong> Subject to
+                          availability
+                        </li>
+                      </ul>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        <strong>Modification Policy:</strong> Date changes are
-                        subject to availability and may incur additional
-                        charges.
-                      </p>
+
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Guest Guidelines
+                      </h3>
+                      <ul className="space-y-2 text-gray-700">
+                        <li>
+                          <strong>Maximum guests:</strong> As per booking
+                          capacity
+                        </li>
+                        <li>
+                          <strong>Age requirement:</strong> 21+ for primary
+                          guest
+                        </li>
+                        <li>
+                          <strong>Smoking:</strong> Non-smoking property
+                        </li>
+                        <li>
+                          <strong>Parties/Events:</strong> Not permitted
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-gray-900 mb-3">
+                      House Rules
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          Quiet Hours
+                        </h4>
+                        <p className="text-sm text-gray-700">
+                          Please respect quiet hours from 10:00 PM to 8:00 AM to
+                          ensure all guests can enjoy a peaceful stay.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <h4 className="font-medium text-gray-900 mb-2">
+                          Property Care
+                        </h4>
+                        <p className="text-sm text-gray-700">
+                          Please treat the property with care. Any damages will
+                          be assessed and charged accordingly.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-700">
-                  <strong>Need to cancel or modify your booking?</strong>{" "}
-                  Contact our support team as soon as possible. We're here to
-                  help make the process as smooth as possible.
-                </p>
-              </div>
-            </div>
+                {/* 6. Cancellation Policy */}
+                <div className="flex flex-col bg-white rounded-lg border p-6">
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Cancellation Policy
+                  </h2>
 
-            {/* 7. Location */}
-            <div className="flex flex-col bg-white rounded-lg border p-6">
-              <h2 className="text-2xl font-semibold mb-4">Location</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <PropertyMap
-                    propertyName={listingName}
-                    height="400px"
-                    className="rounded-lg shadow-sm"
-                    showDirectionsLink={true}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-700 mb-2">
-                      Location Details
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <span>📍</span>
-                        <span>London, UK</span>
+                  <div className="mb-6">
+                    <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
+                      Flexible Cancellation Policy
+                    </div>
+                    <p className="text-gray-700 leading-relaxed">
+                      We understand that travel plans can change. Our flexible
+                      cancellation policy is designed to give you peace of mind
+                      when booking your stay.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Cancellation Terms
+                      </h3>
+                      <ul className="space-y-3">
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-600 mt-1">✓</span>
+                          <div>
+                            <div className="font-medium">Free cancellation</div>
+                            <div className="text-sm text-gray-600">
+                              Up to 24 hours before check-in
+                            </div>
+                          </div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-yellow-600 mt-1">⚠</span>
+                          <div>
+                            <div className="font-medium">Partial refund</div>
+                            <div className="text-sm text-gray-600">
+                              Less than 24 hours: 50% refund
+                            </div>
+                          </div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-red-600 mt-1">✗</span>
+                          <div>
+                            <div className="font-medium">No refund</div>
+                            <div className="text-sm text-gray-600">
+                              No-show or same-day cancellation
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Important Notes
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="p-3 bg-yellow-50 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            <strong>Special Circumstances:</strong> We may offer
+                            additional flexibility for medical emergencies or
+                            extraordinary circumstances.
+                          </p>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <strong>Modification Policy:</strong> Date changes
+                            are subject to availability and may incur additional
+                            charges.
+                          </p>
+                        </div>
                       </div>
-                      {(() => {
-                        const location = getPropertyLocation(listingName);
-                        return location ? (
-                          <>
-                            {location.neighborhood && (
-                              <div className="flex items-center gap-2 text-gray-600">
-                                <span>🏘️</span>
-                                <span>{location.neighborhood}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>Need to cancel or modify your booking?</strong>{" "}
+                      Contact our support team as soon as possible. We're here
+                      to help make the process as smooth as possible.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 7. Location */}
+                <div className="flex flex-col bg-white rounded-lg border p-6">
+                  <h2 className="text-2xl font-semibold mb-4">Location</h2>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2">
+                      <PropertyMap
+                        propertyName={listingName}
+                        height="400px"
+                        className="rounded-lg shadow-sm"
+                        showDirectionsLink={true}
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-gray-700 mb-2">
+                          Location Details
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <span>📍</span>
+                            <span>London, UK</span>
+                          </div>
+                          {(() => {
+                            const location = getPropertyLocation(listingName);
+                            return location ? (
+                              <>
+                                {location.neighborhood && (
+                                  <div className="flex items-center gap-2 text-gray-600">
+                                    <span>🏘️</span>
+                                    <span>{location.neighborhood}</span>
+                                  </div>
+                                )}
+                                {location.description && (
+                                  <div className="mt-3 p-3 bg-white rounded text-xs text-gray-600">
+                                    {location.description}
+                                  </div>
+                                )}
+                              </>
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-gray-700 mb-2">
+                          Getting Around
+                        </h3>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <span>🚇</span>
+                            <span>Near major transport links</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span>🚶</span>
+                            <span>Walking distance to attractions</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span>🅿️</span>
+                            <span>Parking options available</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-gray-700 mb-2">
+                          Nearby Highlights
+                        </h3>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div>🏛️ Museums & galleries nearby</div>
+                          <div>🍽️ Excellent dining options</div>
+                          <div>🛍️ Shopping districts</div>
+                          <div>🌳 Parks & green spaces</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 8. Reviews */}
+                <div className="flex flex-col bg-white rounded-lg border p-6">
+                  <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+                    <h2 className="text-2xl font-semibold">
+                      Guest Reviews ({reviews.length})
+                    </h2>
+                    {reviews.length > 0 && (
+                      <PaginationInfo
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={filteredReviews.length}
+                        itemsPerPage={REVIEWS_PER_PAGE}
+                      />
+                    )}
+                  </div>
+
+                  {/* Enhanced Filters */}
+                  {reviews.length > 0 && (
+                    <div className="mb-6">
+                      <CombinedListingFilters
+                        onFiltersChange={setFilters}
+                        reviewCount={filteredReviews.length}
+                        availableCategories={availableCategories}
+                        availableLanguages={availableLanguages}
+                        sourceStats={stats?.sources}
+                        isLoading={isLoading}
+                      />
+                    </div>
+                  )}
+
+                  {/* Pagination Top */}
+                  {filteredReviews.length > REVIEWS_PER_PAGE && (
+                    <div className="mb-6">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={goToPage}
+                      />
+                    </div>
+                  )}
+
+                  {/* Reviews List */}
+                  <div className="space-y-6">
+                    {paginatedReviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="bg-gray-50 border rounded-lg p-6"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-lg">
+                                {review.author}
+                              </h3>
+                              {review.authorPhoto ? (
+                                <img
+                                  src={review.authorPhoto}
+                                  alt={review.author}
+                                  width={32}
+                                  height={32}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=3B82F6&color=fff&size=32`;
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
+                                  {review.author.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <ReviewSourceBadge
+                                source={review.source}
+                                type={review.type}
+                              />
+                              <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Published
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {review.relativeTime ||
+                                  formatDateLong(review.submittedAt)}
+                              </span>
+                            </div>
+                            {review.language && review.language !== "en" && (
+                              <div className="text-xs text-gray-500 mb-2">
+                                Language: {review.language.toUpperCase()}
+                                {review.translated && " (translated)"}
                               </div>
                             )}
-                            {location.description && (
-                              <div className="mt-3 p-3 bg-white rounded text-xs text-gray-600">
-                                {location.description}
+                          </div>
+
+                          {review.overallRating && (
+                            <div className="text-right">
+                              <div className="flex items-center">
+                                {renderStars(review.overallRating)}
                               </div>
-                            )}
-                          </>
-                        ) : null;
-                      })()}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-700 mb-2">
-                      Getting Around
-                    </h3>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <span>🚇</span>
-                        <span>Near major transport links</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>🚶</span>
-                        <span>Walking distance to attractions</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>🅿️</span>
-                        <span>Parking options available</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-700 mb-2">
-                      Nearby Highlights
-                    </h3>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div>🏛️ Museums & galleries nearby</div>
-                      <div>🍽️ Excellent dining options</div>
-                      <div>🛍️ Shopping districts</div>
-                      <div>🌳 Parks & green spaces</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 8. Reviews */}
-            <div className="flex flex-col bg-white rounded-lg border p-6">
-              <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
-                <h2 className="text-2xl font-semibold">
-                  Guest Reviews ({reviews.length})
-                </h2>
-                {reviews.length > 0 && (
-                  <PaginationInfo
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalItems={filteredReviews.length}
-                    itemsPerPage={REVIEWS_PER_PAGE}
-                  />
-                )}
-              </div>
-
-              {/* Enhanced Filters */}
-              {reviews.length > 0 && (
-                <div className="mb-6">
-                  <CombinedListingFilters
-                    onFiltersChange={setFilters}
-                    reviewCount={filteredReviews.length}
-                    availableCategories={availableCategories}
-                    availableLanguages={availableLanguages}
-                    sourceStats={stats?.sources}
-                    isLoading={isLoading}
-                  />
-                </div>
-              )}
-
-              {/* Pagination Top */}
-              {filteredReviews.length > REVIEWS_PER_PAGE && (
-                <div className="mb-6">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={goToPage}
-                  />
-                </div>
-              )}
-
-              {/* Reviews List */}
-              <div className="space-y-6">
-                {paginatedReviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="bg-gray-50 border rounded-lg p-6"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-lg">
-                            {review.author}
-                          </h3>
-                          {review.authorPhoto ? (
-                            <img
-                              src={review.authorPhoto}
-                              alt={review.author}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8 rounded-full object-cover"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.onerror = null;
-                                target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=3B82F6&color=fff&size=32`;
-                              }}
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
-                              {review.author.charAt(0).toUpperCase()}
+                              <div className="text-sm text-gray-600 mt-1">
+                                {review.source === "google"
+                                  ? `${review.rating}/5`
+                                  : `${review.overallRating}/10`}
+                              </div>
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <ReviewSourceBadge
-                            source={review.source}
-                            type={review.type}
-                          />
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                            Published
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {review.relativeTime ||
-                              formatDateLong(review.submittedAt)}
-                          </span>
-                        </div>
-                        {review.language && review.language !== "en" && (
-                          <div className="text-xs text-gray-500 mb-2">
-                            Language: {review.language.toUpperCase()}
-                            {review.translated && " (translated)"}
+
+                        <p className="text-gray-800 mb-4 text-base leading-relaxed">
+                          &ldquo;{review.comment}&rdquo;
+                        </p>
+
+                        {review.source === "hostaway" &&
+                          Object.keys(review.categories).length > 0 && (
+                            <div className="border-t pt-4">
+                              <h4 className="font-medium text-sm text-gray-700 mb-3">
+                                Category Ratings:
+                              </h4>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                {Object.entries(review.categories)
+                                  .filter(([, rating]) => rating !== undefined)
+                                  .map(([category, rating]) => (
+                                    <div
+                                      key={category}
+                                      className="bg-white p-2 rounded text-center"
+                                    >
+                                      <div className="capitalize font-medium text-xs text-gray-700 mb-1">
+                                        {category.replace("_", " ")}
+                                      </div>
+                                      <div className="text-sm font-bold text-blue-600">
+                                        {Number(rating)}/10
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                        {review.authorUrl && (
+                          <div className="border-t pt-3 mt-3">
+                            <a
+                              href={review.authorUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:text-blue-700"
+                            >
+                              View on Google →
+                            </a>
                           </div>
                         )}
                       </div>
-
-                      {review.overallRating && (
-                        <div className="text-right">
-                          <div className="flex items-center">
-                            {renderStars(review.overallRating)}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {review.source === "google"
-                              ? `${review.rating}/5`
-                              : `${review.overallRating}/10`}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-gray-800 mb-4 text-base leading-relaxed">
-                      &ldquo;{review.comment}&rdquo;
-                    </p>
-
-                    {review.source === "hostaway" &&
-                      Object.keys(review.categories).length > 0 && (
-                        <div className="border-t pt-4">
-                          <h4 className="font-medium text-sm text-gray-700 mb-3">
-                            Category Ratings:
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                            {Object.entries(review.categories)
-                              .filter(([, rating]) => rating !== undefined)
-                              .map(([category, rating]) => (
-                                <div
-                                  key={category}
-                                  className="bg-white p-2 rounded text-center"
-                                >
-                                  <div className="capitalize font-medium text-xs text-gray-700 mb-1">
-                                    {category.replace("_", " ")}
-                                  </div>
-                                  <div className="text-sm font-bold text-blue-600">
-                                    {Number(rating)}/10
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {review.authorUrl && (
-                      <div className="border-t pt-3 mt-3">
-                        <a
-                          href={review.authorUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-700"
-                        >
-                          View on Google →
-                        </a>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+
+                  {/* Pagination Bottom */}
+                  {filteredReviews.length > REVIEWS_PER_PAGE && (
+                    <div className="mt-8">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={goToPage}
+                      />
+                    </div>
+                  )}
+
+                  {/* Empty States */}
+                  {filteredReviews.length === 0 && reviews.length > 0 && (
+                    <div className="text-center py-12 text-gray-500">
+                      <div className="mb-4 text-4xl">🔍</div>
+                      <div className="text-lg font-medium mb-2">
+                        No reviews match your filters
+                      </div>
+                      <div className="text-sm">
+                        Try adjusting your filters to see more reviews for{" "}
+                        {listingName}
+                      </div>
+                      <button
+                        onClick={() =>
+                          setFilters({
+                            sortBy: "date",
+                            sortOrder: "desc",
+                            reviewType: "all",
+                            sourceFilter: "all",
+                          })
+                        }
+                        className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
+
+                  {reviews.length === 0 && !isLoading && (
+                    <div className="text-center py-12 text-gray-500">
+                      <div className="mb-4 text-4xl">📝</div>
+                      <div className="text-lg font-medium mb-2">
+                        No reviews yet for {listingName}
+                      </div>
+                      <div className="text-sm">
+                        Be the first to share your experience with future guests
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Pagination Bottom */}
-              {filteredReviews.length > REVIEWS_PER_PAGE && (
-                <div className="mt-8">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={goToPage}
-                  />
-                </div>
-              )}
+              {/* Right Column - Sticky Booking Widget */}
+              <div className="lg:w-96 lg:shrink-0">
+                <div className="sticky top-6 bg-white border rounded-lg p-6 shadow-lg">
+                  <div className="bg-slate-700 text-white px-4 py-3 rounded-lg mb-6">
+                    <h3 className="text-xl font-semibold">Book your stay</h3>
+                    <p className="text-slate-200 mt-1">
+                      Select dates to see the total price
+                    </p>
+                  </div>
 
-              {/* Empty States */}
-              {filteredReviews.length === 0 && reviews.length > 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="mb-4 text-4xl">🔍</div>
-                  <div className="text-lg font-medium mb-2">
-                    No reviews match your filters
+                  {/* Date Selection */}
+                  <div className="border rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-gray-600">📅</span>
+                      <span className="font-medium">
+                        {formatDate(selectedDates.checkIn)} -{" "}
+                        {formatDate(selectedDates.checkOut)}
+                      </span>
+                      <button className="ml-auto text-sm text-blue-600 hover:text-blue-700">
+                        Change
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Check-in</span>
+                        <div className="font-medium">Aug 21</div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Check-out</span>
+                        <div className="font-medium">Aug 23</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm">
-                    Try adjusting your filters to see more reviews for{" "}
-                    {listingName}
-                  </div>
-                  <button
-                    onClick={() =>
-                      setFilters({
-                        sortBy: "date",
-                        sortOrder: "desc",
-                        reviewType: "all",
-                        sourceFilter: "all",
-                      })
-                    }
-                    className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Clear all filters
-                  </button>
-                </div>
-              )}
 
-              {reviews.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="mb-4 text-4xl">📝</div>
-                  <div className="text-lg font-medium mb-2">
-                    No reviews found
+                  {/* Guest Selection */}
+                  <div className="border rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">Guests</span>
+                        <div className="text-sm text-gray-500">
+                          {guests} guests
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setGuests(Math.max(1, guests - 1))}
+                          className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-50"
+                        >
+                          −
+                        </button>
+                        <span className="font-medium w-8 text-center">
+                          {guests}
+                        </span>
+                        <button
+                          onClick={() => setGuests(Math.min(6, guests + 1))}
+                          className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-50"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm">
-                    Reviews for {listingName} will appear here once they are
-                    available from Google or verified guests
+
+                  {/* Pricing Breakdown */}
+                  <div className="border rounded-lg p-4 mb-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Base price ({nights} nights)</span>
+                        <span>£{(basePrice * nights).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cleaning fee</span>
+                        <span>£{cleaningFee.toFixed(2)}</span>
+                      </div>
+                      <hr />
+                      <div className="flex justify-between font-semibold text-lg">
+                        <span>Total</span>
+                        <span>£{totalPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Coupon Code */}
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex items-center gap-2 mb-2 text-sm">
+                        <span>🎫</span>
+                        <span>Have a coupon code?</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Enter code"
+                          className="flex-1 px-3 py-2 border rounded text-sm"
+                        />
+                        <button className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded">
+                          Apply
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs mt-2 text-gray-400">
-                    We show both Google reviews and verified guest reviews
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    <button className="w-full bg-slate-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                      📅 Book Now
+                    </button>
+                    <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                      💬 Send Inquiry
+                    </button>
+                  </div>
+
+                  {/* Instant Confirmation */}
+                  <div className="mt-4 text-center">
+                    <div className="flex items-center justify-center gap-1 text-sm text-green-600">
+                      <span>⚡</span>
+                      <span>Instant confirmation</span>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Footer Navigation */}
@@ -1283,115 +1390,6 @@ export default function ListingPage() {
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sticky Booking Widget */}
-        {showBookingWidget && (
-          <div className="fixed top-20 right-6 w-80 bg-white border shadow-xl rounded-lg p-6 z-30 hidden lg:block">
-            <div className="bg-slate-700 text-white px-4 py-3 rounded-lg mb-4">
-              <h3 className="text-lg font-semibold">Book your stay</h3>
-              <p className="text-sm text-slate-200">
-                Select dates to see the total price
-              </p>
-            </div>
-
-            {/* Date Selection */}
-            <div className="border rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-gray-600">📅</span>
-                <span className="text-sm font-medium">
-                  {formatDate(selectedDates.checkIn)} -{" "}
-                  {formatDate(selectedDates.checkOut)}
-                </span>
-                <button className="ml-auto text-sm text-blue-600 hover:text-blue-700">
-                  Change
-                </button>
-              </div>
-              <div className="text-xs text-gray-500">
-                Check-in: {formatDate(selectedDates.checkIn)} • Check-out:{" "}
-                {formatDate(selectedDates.checkOut)}
-              </div>
-            </div>
-
-            {/* Guest Selection */}
-            <div className="border rounded-lg p-3 mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Guests</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setGuests(Math.max(1, guests - 1))}
-                    className="w-6 h-6 rounded-full border flex items-center justify-center text-sm hover:bg-gray-50"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm font-medium w-8 text-center">
-                    {guests}
-                  </span>
-                  <button
-                    onClick={() => setGuests(Math.min(6, guests + 1))}
-                    className="w-6 h-6 rounded-full border flex items-center justify-center text-sm hover:bg-gray-50"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing Breakdown */}
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
-                <span>Base price ({nights} nights)</span>
-                <span>£{(basePrice * nights).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Cleaning fee</span>
-                <span>£{cleaningFee.toFixed(2)}</span>
-              </div>
-              <hr className="my-2" />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>£{totalPrice.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Coupon Code */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2 text-sm">
-                <span>🎫</span>
-                <span>Have a coupon code?</span>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Enter code"
-                  className="flex-1 px-3 py-2 border rounded text-sm"
-                />
-                <button className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
-                  Apply
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button className="w-full bg-slate-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
-                📅 Book Now
-              </button>
-              <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                💬 Send Inquiry
-              </button>
-            </div>
-
-            {/* Instant Confirmation */}
-            <div className="mt-4 text-center">
-              <div className="flex items-center justify-center gap-1 text-sm text-green-600">
-                <span>⚡</span>
-                <span>Instant confirmation</span>
               </div>
             </div>
           </div>
