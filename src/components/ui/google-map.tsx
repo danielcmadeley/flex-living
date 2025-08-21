@@ -437,10 +437,20 @@ interface MultiPropertyMapProps {
     lng?: number;
     placeId?: string;
     address?: string;
+    isSelected?: boolean;
+    isVisible?: boolean;
   }>;
   height?: string;
   className?: string;
   onPropertyClick?: (propertyName: string) => void;
+  onBoundsChange?: (bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }) => void;
+  selectedProperty?: string | null;
+  mapInstanceRef?: React.MutableRefObject<any>;
 }
 
 export function MultiPropertyMap({
@@ -448,10 +458,17 @@ export function MultiPropertyMap({
   height = "500px",
   className = "",
   onPropertyClick,
+  onBoundsChange,
+  selectedProperty,
+  mapInstanceRef,
 }: MultiPropertyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const markersRef = useRef<any[]>([]);
+  const infoWindowsRef = useRef<any[]>([]);
+  const localMapRef = useRef<any>(null);
+  const [mapInitialized, setMapInitialized] = useState(false);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -507,17 +524,18 @@ export function MultiPropertyMap({
     };
   }, [apiKey]);
 
-  // Initialize map when Google Maps is loaded
+  // Initialize map only once when Google Maps is loaded
   useEffect(() => {
-    if (
-      !isLoaded ||
-      !mapRef.current ||
-      !window.google ||
-      properties.length === 0
-    )
+    if (!isLoaded || !mapRef.current || !window.google || mapInitialized)
       return;
 
     const initializeMap = async () => {
+      // Ensure DOM element is ready
+      if (!mapRef.current) {
+        console.warn("Map container not found");
+        return;
+      }
+
       try {
         // Calculate bounds for all properties
         const bounds = new window.google.maps.LatLngBounds();
@@ -530,6 +548,14 @@ export function MultiPropertyMap({
 
         // Default center (London)
         const center = { lat: 51.5074, lng: -0.1278 };
+
+        // Add small delay to ensure DOM is fully ready
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        if (!mapRef.current) {
+          console.warn("Map container removed during initialization");
+          return;
+        }
 
         const map = new window.google.maps.Map(mapRef.current, {
           center: center,
@@ -547,56 +573,39 @@ export function MultiPropertyMap({
           zoomControl: true,
         });
 
-        // Add markers for each property
-        validProperties.forEach((property, index) => {
-          const position = { lat: property.lat!, lng: property.lng! };
-          bounds.extend(position);
+        // Store map instance reference
+        localMapRef.current = map;
+        if (mapInstanceRef) {
+          mapInstanceRef.current = map;
+        }
 
-          const marker = new window.google.maps.Marker({
-            position: position,
-            map: map,
-            title: property.name,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: "#3B82F6",
-              fillOpacity: 1,
-              strokeColor: "#FFFFFF",
-              strokeWeight: 3,
-            },
-            label: {
-              text: (index + 1).toString(),
-              color: "white",
-              fontSize: "12px",
-              fontWeight: "bold",
-            },
+        // Add bounds change listener with throttling (only once during initialization)
+        if (onBoundsChange) {
+          let boundsTimeout: NodeJS.Timeout;
+          map.addListener("bounds_changed", () => {
+            clearTimeout(boundsTimeout);
+            boundsTimeout = setTimeout(() => {
+              const bounds = map.getBounds();
+              if (bounds) {
+                const ne = bounds.getNorthEast();
+                const sw = bounds.getSouthWest();
+                onBoundsChange({
+                  north: ne.lat(),
+                  south: sw.lat(),
+                  east: ne.lng(),
+                  west: sw.lng(),
+                });
+              }
+            }, 500); // Throttle bounds changes
           });
+        }
 
-          // Add info window
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: `
-              <div style="padding: 12px; max-width: 250px;">
-                <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 16px; color: #1f2937;">
-                  ${property.name}
-                </h3>
-                ${property.address ? `<p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">${property.address}</p>` : ""}
-                <button
-                  onclick="window.selectProperty('${property.name}')"
-                  style="background: #3B82F6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; width: 100%;"
-                >
-                  View Reviews
-                </button>
-              </div>
-            `,
-          });
-
-          marker.addListener("click", () => {
-            infoWindow.open(map, marker);
-          });
-        });
-
-        // Fit map to show all markers
+        // Fit map to show all properties if we have valid ones
         if (validProperties.length > 1) {
+          validProperties.forEach((property) => {
+            const position = { lat: property.lat!, lng: property.lng! };
+            bounds.extend(position);
+          });
           map.fitBounds(bounds);
 
           // Set a maximum zoom level
@@ -608,36 +617,123 @@ export function MultiPropertyMap({
               window.google.maps.event.removeListener(listener);
             },
           );
-        } else {
+        } else if (validProperties.length === 1) {
           map.setCenter({
             lat: validProperties[0].lat!,
             lng: validProperties[0].lng!,
           });
           map.setZoom(15);
         }
+
+        setMapInitialized(true);
       } catch (err) {
-        console.error("Error initializing multi-property map:", err);
-        setError("Failed to initialize map");
+        console.error("Error initializing map:", err);
+        setError("Failed to initialize map. Please refresh the page.");
       }
     };
 
-    initializeMap();
-  }, [isLoaded, properties]);
+    // Only initialize if we have a DOM element and properties
+    if (mapRef.current && properties.length > 0) {
+      initializeMap();
+    }
+  }, [isLoaded]);
 
-  // Global function for property selection
+  // Update markers when properties change
   useEffect(() => {
-    window.selectProperty = (propertyName: string) => {
+    if (
+      !mapInitialized ||
+      !localMapRef.current ||
+      !window.google ||
+      properties.length === 0
+    ) {
+      return;
+    }
+
+    // Clear existing markers and info windows
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    infoWindowsRef.current.forEach((infoWindow) => infoWindow.close());
+    markersRef.current = [];
+    infoWindowsRef.current = [];
+
+    // Set up window callback for property selection (navigate to property page)
+    (window as any).selectProperty = (propertyName: string) => {
       if (onPropertyClick) {
         onPropertyClick(propertyName);
       }
     };
 
+    const validProperties = properties.filter((p) => p.lat && p.lng);
+
+    // Add new markers
+    validProperties.forEach((property, index) => {
+      const position = { lat: property.lat!, lng: property.lng! };
+      const isSelected = selectedProperty === property.name;
+      const isVisible = property.isVisible !== false;
+
+      const marker = new window.google.maps.Marker({
+        position: position,
+        map: localMapRef.current,
+        title: property.name,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: isSelected ? 12 : 10,
+          fillColor: isSelected ? "#EF4444" : isVisible ? "#3B82F6" : "#9CA3AF",
+          fillOpacity: isVisible ? 1 : 0.5,
+          strokeColor: "#FFFFFF",
+          strokeWeight: isSelected ? 4 : 3,
+        },
+        label: {
+          text: (index + 1).toString(),
+          color: "white",
+          fontSize: isSelected ? "13px" : "12px",
+          fontWeight: "bold",
+        },
+      });
+
+      // Store marker reference
+      markersRef.current.push(marker);
+
+      // Add info window
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="padding: 12px; max-width: 250px;">
+            <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 16px; color: #1f2937;">
+              ${property.name}
+            </h3>
+            ${property.address ? `<p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">${property.address}</p>` : ""}
+            <button
+              onclick="window.selectProperty('${property.name}')"
+              style="background: #3B82F6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; width: 100%;"
+            >
+              View Reviews
+            </button>
+          </div>
+        `,
+      });
+
+      // Store info window reference
+      infoWindowsRef.current.push(infoWindow);
+
+      // Marker click only shows popup, doesn't navigate
+      marker.addListener("click", () => {
+        // Close all other info windows
+        infoWindowsRef.current.forEach((iw) => {
+          if (iw !== infoWindow) {
+            iw.close();
+          }
+        });
+        // Open this info window
+        infoWindow.open(localMapRef.current, marker);
+      });
+    });
+
+    // Cleanup function
     return () => {
-      if (window.selectProperty) {
-        delete window.selectProperty;
+      if ((window as any).selectProperty) {
+        delete (window as any).selectProperty;
       }
     };
-  }, [onPropertyClick]);
+  }, [mapInitialized, properties, selectedProperty, onPropertyClick]);
 
   if (!apiKey) {
     return (

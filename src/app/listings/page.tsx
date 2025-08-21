@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
@@ -19,20 +20,163 @@ import {
 } from "@/lib/utils/formatting";
 import { PAGINATION, RATINGS, TEXT_LIMITS } from "@/lib/constants";
 
+// Types for map synchronization
+interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+interface PropertyLocation {
+  name: string;
+  lat: number;
+  lng: number;
+  placeId: string;
+  address: string;
+}
+
+// Declare global google types for TypeScript
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export default function ListingsPage() {
   const { listings, statistics, isLoading, isError, error, refetch } =
     useListings();
   const router = useRouter();
 
-  // Pagination configuration
+  // Map synchronization state
+  const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  const [visibleProperties, setVisibleProperties] = useState<string[]>([]);
+  const mapInstanceRef = useRef<any>(null);
+
+  // Get all property locations
+  const allPropertyLocations = getAllPropertyLocations();
+
+  // Filter listings to only show those visible on the map
+  const filteredListings = listings.filter(
+    (listing) =>
+      visibleProperties.length === 0 ||
+      visibleProperties.includes(listing.name),
+  );
+
+  // Pagination configuration for filtered listings
   const { currentPage, totalPages, startIndex, endIndex, goToPage } =
     usePagination({
-      totalItems: listings.length,
+      totalItems: filteredListings.length,
       itemsPerPage: PAGINATION.LISTINGS_PER_PAGE,
       initialPage: 1,
     });
 
-  const paginatedListings = listings.slice(startIndex, endIndex);
+  const paginatedListings = filteredListings.slice(startIndex, endIndex);
+
+  // Function to check if a property is within map bounds
+  const isPropertyInBounds = useCallback(
+    (property: { lat?: number; lng?: number }, bounds: MapBounds): boolean => {
+      if (!property.lat || !property.lng) return false;
+      return (
+        property.lat <= bounds.north &&
+        property.lat >= bounds.south &&
+        property.lng <= bounds.east &&
+        property.lng >= bounds.west
+      );
+    },
+    [],
+  );
+
+  // Update visible properties when map bounds change
+  useEffect(() => {
+    if (mapBounds) {
+      const visible = allPropertyLocations
+        .filter((location) => isPropertyInBounds(location, mapBounds))
+        .map((location) => location.name);
+      setVisibleProperties((prev) => {
+        // Only update if the arrays are different
+        if (
+          prev.length !== visible.length ||
+          prev.some((name, index) => name !== visible[index])
+        ) {
+          return visible;
+        }
+        return prev;
+      });
+    }
+  }, [mapBounds]);
+
+  // Handle map bounds change
+  const handleMapBoundsChange = useCallback((bounds: MapBounds) => {
+    setMapBounds((prevBounds) => {
+      // Only update if bounds actually changed
+      if (
+        !prevBounds ||
+        prevBounds.north !== bounds.north ||
+        prevBounds.south !== bounds.south ||
+        prevBounds.east !== bounds.east ||
+        prevBounds.west !== bounds.west
+      ) {
+        return bounds;
+      }
+      return prevBounds;
+    });
+  }, []);
+
+  // Handle property selection from map (for navigation only)
+  const handlePropertySelect = useCallback(
+    (propertyName: string) => {
+      // Navigate to property details
+      const slug = createListingSlug(propertyName);
+      router.push(`/listings/${slug}`);
+    },
+    [router],
+  );
+
+  // Handle property click from grid
+  const handleGridPropertyClick = useCallback(
+    (propertyName: string) => {
+      setSelectedProperty(propertyName);
+
+      // Find the property location and center map on it
+      const propertyLocation = allPropertyLocations.find(
+        (location) => location.name === propertyName,
+      );
+
+      if (
+        propertyLocation &&
+        propertyLocation.lat &&
+        propertyLocation.lng &&
+        mapInstanceRef.current
+      ) {
+        const position = {
+          lat: propertyLocation.lat,
+          lng: propertyLocation.lng,
+        };
+        mapInstanceRef.current.panTo(position);
+        mapInstanceRef.current.setZoom(15);
+      }
+    },
+    [allPropertyLocations],
+  );
+
+  // Memoize property data to prevent unnecessary re-renders
+  const mapProperties = useMemo(
+    () =>
+      allPropertyLocations.map((location) => ({
+        name: location.name,
+        lat: location.lat,
+        lng: location.lng,
+        placeId: location.placeId,
+        address: location.address,
+        isSelected: selectedProperty === location.name,
+        isVisible:
+          visibleProperties.length === 0 ||
+          visibleProperties.includes(location.name),
+      })),
+    [allPropertyLocations, selectedProperty, visibleProperties],
+  );
 
   if (isLoading) {
     return <ListingsPageLoadingState />;
@@ -88,7 +232,10 @@ export default function ListingsPage() {
                       Flex Living Properties
                     </h1>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                      {listings.length} Properties
+                      {visibleProperties.length > 0 &&
+                      visibleProperties.length < listings.length
+                        ? `${filteredListings.length} of ${listings.length} Properties`
+                        : `${listings.length} Properties`}
                     </span>
                   </div>
                   <p className="text-gray-600 mb-2">
@@ -128,57 +275,65 @@ export default function ListingsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {paginatedListings.map((listing) => (
-                    <Link
-                      key={listing.name}
-                      href={`/listings/${createListingSlug(listing.name)}`}
-                      className="group"
-                    >
-                      <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
-                        <div className="mb-3">
-                          <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors mb-2">
-                            {listing.name}
-                          </h3>
-                          <div className="flex items-center gap-3 mb-2">
-                            {listing.averageRating > 0 && (
-                              <div className="flex items-center">
-                                <div className="flex items-center mr-1">
-                                  {renderStars(listing.averageRating)}
+                    <div key={listing.name} className="group">
+                      <Link
+                        href={`/listings/${createListingSlug(listing.name)}`}
+                        className="block"
+                        onClick={() => setSelectedProperty(listing.name)}
+                      >
+                        <div
+                          className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${
+                            selectedProperty === listing.name
+                              ? "ring-2 ring-blue-500 border-blue-300 bg-blue-50"
+                              : ""
+                          }`}
+                        >
+                          <div className="mb-3">
+                            <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors mb-2">
+                              {listing.name}
+                            </h3>
+                            <div className="flex items-center gap-3 mb-2">
+                              {listing.averageRating > 0 && (
+                                <div className="flex items-center">
+                                  <div className="flex items-center mr-1">
+                                    {renderStars(listing.averageRating)}
+                                  </div>
+                                  <span className="text-sm font-medium">
+                                    {formatRating(listing.averageRating)}/
+                                    {RATINGS.MAX_RATING}
+                                  </span>
                                 </div>
-                                <span className="text-sm font-medium">
-                                  {formatRating(listing.averageRating)}/
-                                  {RATINGS.MAX_RATING}
-                                </span>
-                              </div>
-                            )}
-                            <span className="text-sm text-gray-500">
-                              {formatCount(listing.reviewCount, "review")}
-                            </span>
+                              )}
+                              <span className="text-sm text-gray-500">
+                                {formatCount(listing.reviewCount, "review")}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 text-sm line-clamp-2 mb-2">
+                              &ldquo;
+                              {truncateText(
+                                listing.sampleReview,
+                                TEXT_LIMITS.REVIEW_PREVIEW,
+                              )}
+                              &rdquo;
+                            </p>
                           </div>
-                          <p className="text-gray-600 text-sm line-clamp-2 mb-2">
-                            &ldquo;
-                            {truncateText(
-                              listing.sampleReview,
-                              TEXT_LIMITS.REVIEW_PREVIEW,
-                            )}
-                            &rdquo;
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <span className="mr-1">📍</span>
-                            <span>London Property</span>
-                          </div>
-                          <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">
-                            View Reviews →
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center text-sm text-gray-500">
+                              <span className="mr-1">📍</span>
+                              <span>London Property</span>
+                            </div>
+                            <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">
+                              View Reviews →
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </div>
                   ))}
                 </div>
 
                 {/* Pagination */}
-                {listings.length > PAGINATION.LISTINGS_PER_PAGE && (
+                {filteredListings.length > PAGINATION.LISTINGS_PER_PAGE && (
                   <div className="mt-8 flex justify-center">
                     <Pagination
                       currentPage={currentPage}
@@ -187,6 +342,28 @@ export default function ListingsPage() {
                     />
                   </div>
                 )}
+
+                {/* Show filtered results info */}
+                {visibleProperties.length > 0 &&
+                  visibleProperties.length < listings.length && (
+                    <div className="mt-4 text-center">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Showing {filteredListings.length} of {listings.length}{" "}
+                        properties in current map view
+                      </div>
+                    </div>
+                  )}
               </>
             )}
           </div>
@@ -195,19 +372,13 @@ export default function ListingsPage() {
         {/* Right side - Fixed map (1/3 width) */}
         <div className="w-[40%] h-full">
           <MultiPropertyMap
-            properties={getAllPropertyLocations().map((location) => ({
-              name: location.name,
-              lat: location.lat,
-              lng: location.lng,
-              placeId: location.placeId,
-              address: location.address,
-            }))}
+            properties={mapProperties}
             height="100%"
             className="w-full h-full"
-            onPropertyClick={(propertyName) => {
-              const slug = createListingSlug(propertyName);
-              router.push(`/listings/${slug}`);
-            }}
+            onPropertyClick={handlePropertySelect}
+            onBoundsChange={handleMapBoundsChange}
+            selectedProperty={selectedProperty}
+            mapInstanceRef={mapInstanceRef}
           />
         </div>
       </div>
