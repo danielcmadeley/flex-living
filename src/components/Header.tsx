@@ -1,21 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 py-4">
+    <header className="bg-transparent sticky top-0 z-[99999]">
+      <div className="max-w-[90rem] mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="text-2xl font-bold text-blue-600">
-                Flex Living
-              </div>
+              <Image
+                src="https://theflex.global/_next/image?url=https%3A%2F%2Flsmvmmgkpbyqhthzdexc.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fwebsite%2FUploads%2FGreen_V3%2520Symbol%2520%26%2520Wordmark%2520(1).png&w=256&q=75"
+                alt="Logo"
+                width={120}
+                height={120}
+              />
             </Link>
           </div>
 
@@ -31,8 +35,10 @@ export function Header() {
             </Link>
             <Link
               href="/listings"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                pathname?.startsWith("/listings") ? "text-blue-600" : "text-gray-700"
+              className={`text-sm font-medium transition-colors hover:text-[#284E4C] ${
+                pathname?.startsWith("/listings")
+                  ? "text-[#284E4C]"
+                  : "text-gray-700"
               }`}
             >
               Properties
@@ -93,7 +99,9 @@ export function Header() {
             <Link
               href="/listings"
               className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                pathname?.startsWith("/listings") ? "text-blue-600" : "text-gray-700"
+                pathname?.startsWith("/listings")
+                  ? "text-blue-600"
+                  : "text-gray-700"
               }`}
             >
               Properties
