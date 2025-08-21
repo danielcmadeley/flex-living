@@ -356,7 +356,7 @@ export function ReviewsTable({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Reviews</CardTitle>
         </CardHeader>
@@ -377,7 +377,7 @@ export function ReviewsTable({
   }
 
   return (
-    <Card>
+    <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Reviews ({reviews.length})</span>

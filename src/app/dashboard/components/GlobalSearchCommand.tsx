@@ -21,7 +21,6 @@ import {
   User,
   Calendar,
   Database,
-  Settings,
   Home,
   Filter,
 } from "lucide-react";
@@ -542,28 +541,12 @@ function getNavigationItems(): SearchResult[] {
     },
 
     {
-      id: "nav-search",
-      type: "navigation",
-      title: "Search",
-      description: "Search and filter reviews",
-      url: "/dashboard/search",
-      icon: <Search className="h-4 w-4" />,
-    },
-    {
       id: "nav-seed",
       type: "navigation",
       title: "Database Seeding",
       description: "Manage and seed database",
       url: "/dashboard/seed",
       icon: <Database className="h-4 w-4" />,
-    },
-    {
-      id: "nav-settings",
-      type: "navigation",
-      title: "Settings",
-      description: "Application settings",
-      url: "/dashboard/settings",
-      icon: <Settings className="h-4 w-4" />,
     },
   ];
 }

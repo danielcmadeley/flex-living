@@ -201,39 +201,29 @@ export default function ListingsPage() {
         <div className="w-[60%] overflow-y-auto">
           <div className="p-6">
             {/* Header section */}
-            <div className="mb-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                      Flex Living Properties
-                    </h1>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                      {visibleProperties.length > 0 &&
-                      visibleProperties.length < listings.length
-                        ? `${filteredListings.length} of ${listings.length} Properties`
-                        : `${listings.length} Properties`}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 mb-2">
-                    Explore our premium properties and read guest reviews
-                  </p>
+            <div className="mb-6 flex flex-col gap-4 border-b">
+              <div className="flex items-center gap-2 justify-between text-sm">
+                <div className="border w-full rounded-md px-2 py-1">London</div>
+                <div className="border w-full rounded-md px-2 py-1">
+                  Aug 21 - Aug 23
                 </div>
-                <div className="flex gap-2">
-                  <Link
-                    href="/"
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium text-sm"
-                  >
-                    ← Home
-                  </Link>
-                  <button
-                    onClick={() => refetch()}
-                    disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50 text-sm"
-                  >
-                    {isLoading ? "Loading..." : "Refresh"}
-                  </button>
+                <div className="border w-full rounded-md px-2 py-1">
+                  1 Guest
                 </div>
+                <div className="border w-full rounded-md px-2 py-1">
+                  Filters
+                </div>
+              </div>
+              <div className="pb-4">
+                <p className="text-xs">
+                  Furnished, flexible apartments available for short- to
+                  medium-term rent by The Flex. From Covent Garden lofts to
+                  Canary Wharf executive suites, our serviced apartments span
+                  every neighbourhood in London. Book nightly, weekly, or
+                  monthly stays and enjoy expertly designed spaces, high-speed
+                  Wi-Fi, fully equipped kitchens and 24/7 local support—your
+                  perfect London rental is ready whenever you are.
+                </p>
               </div>
             </div>
 

@@ -86,7 +86,7 @@ export function HomePage() {
 
       {/* Summary Footer */}
       {!isLoading && (
-        <Card>
+        <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="h-5 w-5" />

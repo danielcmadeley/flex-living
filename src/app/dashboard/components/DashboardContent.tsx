@@ -160,7 +160,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
             )}
 
             {!isLoading && (
-              <div className="bg-white rounded-lg border p-6">
+              <div className="bg-white/80 rounded-lg border border-gray-200/50 p-6 backdrop-blur-sm">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="font-semibold text-gray-900">

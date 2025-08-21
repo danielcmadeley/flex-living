@@ -148,7 +148,7 @@ export function PropertiesPage() {
                     }
                   }}
                 >
-                  <Card className="h-full">
+                  <Card className="h-full bg-white/80 border-gray-200/50 backdrop-blur-sm">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base">

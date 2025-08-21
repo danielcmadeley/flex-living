@@ -1,40 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Database,
-  Upload,
-  Download,
-  Trash2,
-  RefreshCw,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  FileText,
-} from "lucide-react";
-import { toast } from "sonner";
-import {
-  validateSeedData,
   getDatabaseStatus,
   performSeedOperation,
+  validateSeedData,
   type DatabaseStatus,
 } from "@/lib/database-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  CheckCircle,
+  Database,
+  Download,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface SeedProgress {
   total: number;
@@ -198,13 +186,13 @@ export function SeedPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Database Seeding</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight">Database Seeding</h1>
+        <p className="text-muted-foreground text-sm">
           Manage and populate your database with sample data for testing and
           development
         </p>
         {dbStatus && (
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <div className="p-4 bg-muted/50 rounded-lg">
             <h3 className="font-medium mb-2">Current Database Status</h3>
             <div className="flex flex-wrap gap-2 text-sm">
               <Badge variant="outline">
@@ -232,7 +220,7 @@ export function SeedPage() {
 
       {/* Progress Indicator */}
       {seedProgress && (
-        <Card>
+        <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5 animate-spin" />
@@ -266,8 +254,8 @@ export function SeedPage() {
         <Alert
           className={
             seedResult.success
-              ? "border-green-200 bg-green-50"
-              : "border-red-200 bg-red-50"
+              ? "border-green-200 bg-green-50/80 backdrop-blur-sm"
+              : "border-red-200 bg-red-50/80 backdrop-blur-sm"
           }
         >
           {seedResult.success ? (
@@ -289,9 +277,9 @@ export function SeedPage() {
       )}
 
       {/* Seeding Options */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div>
         {/* Sample Data Seeding */}
-        <Card>
+        <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
@@ -305,7 +293,7 @@ export function SeedPage() {
             </p>
 
             <div className="space-y-3">
-              <div className="border rounded-lg p-4">
+              <div className=" p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Standard Seed</h4>
@@ -326,115 +314,13 @@ export function SeedPage() {
                   </Button>
                 </div>
               </div>
-
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Force Seed</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Add sample data regardless of existing data
-                    </p>
-                    <Badge variant="destructive" className="mt-1">
-                      May create duplicates
-                    </Badge>
-                  </div>
-                  <Button
-                    onClick={handleForceSeed}
-                    disabled={isSeeding || isRefetching}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Upload className="h-4 w-4 mr-1" />
-                    Force Seed
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Custom Data Seeding */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Custom Data
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <Label>Seed Type</Label>
-                <Select
-                  value={seedType}
-                  onValueChange={(value: "sample" | "custom" | "file") =>
-                    setSeedType(value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sample">Sample Data</SelectItem>
-                    <SelectItem value="custom">Custom JSON</SelectItem>
-                    <SelectItem value="file">Upload File</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {seedType === "custom" && (
-                <div>
-                  <Label>Custom JSON Data</Label>
-                  <Textarea
-                    placeholder="Enter your JSON data here..."
-                    value={customData}
-                    onChange={(e) => setCustomData(e.target.value)}
-                    rows={8}
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    onClick={handleCustomSeed}
-                    disabled={isSeeding || isRefetching}
-                    className="mt-2 w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Seed Custom Data
-                  </Button>
-                </div>
-              )}
-
-              {seedType === "file" && (
-                <div>
-                  <Label>Upload File</Label>
-                  <Input
-                    type="file"
-                    accept=".json,.csv"
-                    onChange={handleFileSelect}
-                    className="mb-2"
-                  />
-                  {selectedFile && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Selected: {selectedFile.name} (
-                      {(selectedFile.size / 1024).toFixed(1)} KB)
-                    </p>
-                  )}
-                  <Button
-                    onClick={handleFileSeed}
-                    disabled={isSeeding || isRefetching || !selectedFile}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload and Seed
-                  </Button>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Database Management */}
-      <Card>
+      <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
@@ -512,49 +398,6 @@ export function SeedPage() {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Information Panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5" />
-            Seeding Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="font-medium mb-2">Supported Data Types</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Properties (listings)</li>
-                <li>• Guest profiles</li>
-                <li>• Host reviews (host → guest)</li>
-                <li>• Guest reviews (guest → host)</li>
-                <li>• Category ratings</li>
-                <li>• Review metadata</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">File Formats</h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• JSON files (.json)</li>
-                <li>• CSV files (.csv)</li>
-                <li>• Custom JSON via text input</li>
-                <li>• Pre-configured sample datasets</li>
-              </ul>
-            </div>
-          </div>
-
-          <Alert className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Warning:</strong> Seeding will replace existing data. Make
-              sure to export your current data before proceeding if you need to
-              preserve it.
-            </AlertDescription>
-          </Alert>
         </CardContent>
       </Card>
     </div>

@@ -40,19 +40,57 @@ export const normalizedReviewSchema = z.object({
 
 // API query schemas
 export const reviewQuerySchema = z.object({
-  type: reviewTypeSchema.optional(),
-  status: reviewStatusSchema.optional(),
-  listingName: z.string().optional(),
+  type: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      return val as "host-to-guest" | "guest-to-host";
+    })
+    .pipe(reviewTypeSchema.optional()),
+  status: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      return val as "published" | "pending" | "draft";
+    })
+    .pipe(reviewStatusSchema.optional()),
+  listingName: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      return val;
+    }),
   limit: z
     .string()
-    .transform((val) => (val ? parseInt(val) : undefined))
-    .optional(),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      const parsed = parseInt(val);
+      return isNaN(parsed) ? undefined : parsed;
+    }),
+  sortOrder: z
+    .string()
+    .default("desc")
+    .transform((val) => {
+      if (val === "asc" || val === "desc") return val;
+      return "desc";
+    }),
   includeStats: z
     .string()
+    .optional()
     .transform((val) => val === "true")
     .default(false),
-  groupBy: z.enum(["listing", "type"]).optional(),
+  groupBy: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      return val as "listing" | "type";
+    })
+    .pipe(z.enum(["listing", "type"]).optional()),
 });
 
 // API response schemas

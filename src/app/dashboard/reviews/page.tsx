@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
-import DashboardContent from "../components/DashboardContent";
+import { ReviewsPageClient } from "./ReviewsPageClient";
 
-const ReviewsPage = async () => {
+const ReviewsPageWrapper = async () => {
   const supabase = await createClient();
 
   const {
@@ -13,7 +13,7 @@ const ReviewsPage = async () => {
     redirect("/login");
   }
 
-  return <DashboardContent user={user} />;
+  return <ReviewsPageClient user={user} />;
 };
 
-export default ReviewsPage;
+export default ReviewsPageWrapper;

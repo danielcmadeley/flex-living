@@ -33,8 +33,6 @@ import {
   Home,
   Building,
   Database,
-  Search,
-  Settings,
   LogOut,
   User as UserIcon,
   ChevronUp,
@@ -77,12 +75,6 @@ const navigationItems: NavigationItem[] = [
     icon: MessageSquare,
     description: "Review management and insights",
   },
-  {
-    title: "Search",
-    url: "/dashboard/search",
-    icon: Search,
-    description: "Search and filter reviews",
-  },
 ];
 
 const managementItems: NavigationItem[] = [
@@ -91,12 +83,6 @@ const managementItems: NavigationItem[] = [
     url: "/dashboard/seed",
     icon: Database,
     description: "Manage and seed database",
-  },
-  {
-    title: "Settings",
-    url: "/dashboard/settings",
-    icon: Settings,
-    description: "Application settings",
   },
 ];
 
@@ -283,12 +269,7 @@ export function DashboardSidebar({
                     <UserIcon className="h-4 w-4 mr-2" />
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => router.push("/dashboard/settings")}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
@@ -318,9 +299,7 @@ export function DashboardSidebar({
                 {pathname.startsWith("/dashboard/properties/") &&
                   "Property Details"}
                 {pathname === "/dashboard/reviews" && "Reviews"}
-                {pathname === "/dashboard/search" && "Search"}
                 {pathname === "/dashboard/seed" && "Database Seeding"}
-                {pathname === "/dashboard/settings" && "Settings"}
               </span>
             </div>
           </div>

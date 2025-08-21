@@ -17,7 +17,7 @@ interface ReviewsGridViewProps {
  */
 function ReviewCardSkeleton() {
   return (
-    <Card>
+    <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
       <CardContent className="p-6">
         <div className="space-y-3">
           <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse" />
@@ -38,7 +38,7 @@ function ReviewCardSkeleton() {
  */
 function EmptyState() {
   return (
-    <Card>
+    <Card className="bg-white/80 border-gray-200/50 backdrop-blur-sm">
       <CardContent className="flex flex-col items-center justify-center h-48">
         <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">No Reviews Found</h3>
@@ -72,13 +72,11 @@ function ReviewCard({ review }: { review: NormalizedReview }) {
   };
 
   const getReviewTypeLabel = (type: string) => {
-    return type === REVIEW_TYPE.HOST_TO_GUEST
-      ? "Host → Guest"
-      : "Guest → Host";
+    return type === REVIEW_TYPE.HOST_TO_GUEST ? "Host → Guest" : "Guest → Host";
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-lg transition-shadow bg-white/80 border-gray-200/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
