@@ -209,9 +209,9 @@ export default function ListingsPage() {
     <>
       <Header />
       {/* Full height container below header */}
-      <div className="flex h-[calc(100vh-80px)] bg-gray-50">
+      <div className="flex h-[calc(100vh-80px)]">
         {/* Left side - Scrollable properties (2/3 width) */}
-        <div className="w-[60%] overflow-y-auto bg-white">
+        <div className="w-[60%] overflow-y-auto">
           <div className="p-8">
             {/* Header section */}
             <div className="mb-8 pb-6 border-b border-gray-200">
@@ -275,7 +275,7 @@ export default function ListingsPage() {
             {/* Properties Grid */}
             {listings.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20  rounded-full mb-6">
                   <span className="text-3xl">🏠</span>
                 </div>
                 <div className="text-xl font-semibold mb-3 text-gray-700">
@@ -456,7 +456,7 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      <div className="bg-white">
+      <div>
         <div className="max-w-6xl mx-auto px-8 py-16">
           {/* Main Content */}
           <div className="mb-16">
