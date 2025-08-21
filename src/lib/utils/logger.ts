@@ -89,10 +89,12 @@ class Logger {
     const formattedMessage = this.formatMessage("debug", message, context);
     const formattedData = this.formatData(data, context);
 
-    if (formattedData) {
-      console.log(formattedMessage, formattedData);
-    } else {
-      console.log(formattedMessage);
+    if (process.env.NODE_ENV === "development") {
+      if (formattedData) {
+        console.log(formattedMessage, formattedData);
+      } else {
+        console.log(formattedMessage);
+      }
     }
   }
 

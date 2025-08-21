@@ -50,9 +50,11 @@ export function GoogleMap({
   // Load Google Maps API
   useEffect(() => {
     if (!apiKey) {
-      console.warn(
-        "Google Maps API key is not configured. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.",
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "Google Maps API key is not configured. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.",
+        );
+      }
       setError("Google Maps API key is not configured");
       return;
     }
@@ -532,7 +534,9 @@ export function MultiPropertyMap({
     const initializeMap = async () => {
       // Ensure DOM element is ready
       if (!mapRef.current) {
-        console.warn("Map container not found");
+        if (process.env.NODE_ENV === "development") {
+          console.warn("Map container not found");
+        }
         return;
       }
 
@@ -548,7 +552,9 @@ export function MultiPropertyMap({
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         if (!mapRef.current) {
-          console.warn("Map container removed during initialization");
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Map container removed during initialization");
+          }
           return;
         }
 

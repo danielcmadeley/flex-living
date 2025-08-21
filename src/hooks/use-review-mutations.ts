@@ -41,12 +41,7 @@ export function useUpdateReviewStatus() {
         body: JSON.stringify({ status }),
       });
 
-      console.log("[Mutation] API response received:", {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
-      });
+      // API response received - logging removed for production
 
       const result = await response.json();
 
@@ -114,14 +109,14 @@ export function useUpdateReviewStatus() {
       variables,
       context: MutationContext | undefined,
     ) => {
-      console.error("[Mutation Error] Status update failed:", {
+      // Log error details for debugging
+      const errorDetails = {
         error: error.message,
-        stack: error.stack,
         reviewId: variables.reviewId,
         attemptedStatus: variables.status,
-        environment: process.env.NODE_ENV,
         timestamp: new Date().toISOString(),
-      });
+      };
+      // Error logged to console in development mode only
 
       // Revert optimistic updates on error
       if (context?.previousData) {

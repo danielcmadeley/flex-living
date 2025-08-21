@@ -138,8 +138,6 @@ export function useListingByName(listingName?: string) {
       if (!listingName) return null;
 
       try {
-        console.log("useListingByName called with:", listingName);
-
         // First, get all available listings to find the best match
         const allListingsResponse = await fetch(
           "/api/reviews/hostaway?status=published&getAllListings=true",
@@ -152,7 +150,6 @@ export function useListingByName(listingName?: string) {
         }
 
         const allListingsData = await allListingsResponse.json();
-        console.log("Available listings:", allListingsData.availableListings);
 
         if (
           allListingsData.status !== "success" ||
@@ -169,18 +166,16 @@ export function useListingByName(listingName?: string) {
         // If listingName looks like a slug, convert it and find best match
         let targetListingName = listingName;
         if (listingName.includes("-")) {
-          console.log("Input appears to be a slug:", listingName);
           const potentialSlug = listingName;
           const bestMatch = findBestMatchingListing(
             potentialSlug,
             allListingsData.availableListings,
           );
-          console.log("Best match found:", bestMatch);
+
           if (bestMatch) {
             targetListingName = bestMatch;
           }
         } else {
-          console.log("Input appears to be a listing name:", listingName);
           // If it's already a listing name, try to find exact or fuzzy match
           const exactMatch = allListingsData.availableListings.find(
             (listing: string) =>
@@ -188,23 +183,20 @@ export function useListingByName(listingName?: string) {
           );
           if (exactMatch) {
             targetListingName = exactMatch;
-            console.log("Exact match found:", exactMatch);
           } else {
             // Try finding by slug conversion
             const slug = createListingSlug(listingName);
-            console.log("Generated slug:", slug);
+
             const slugMatch = findBestMatchingListing(
               slug,
               allListingsData.availableListings,
             );
-            console.log("Slug match found:", slugMatch);
+
             if (slugMatch) {
               targetListingName = slugMatch;
             }
           }
         }
-
-        console.log("Final target listing name:", targetListingName);
 
         // Now fetch reviews for the matched listing
         const searchParams = new URLSearchParams();
@@ -212,7 +204,6 @@ export function useListingByName(listingName?: string) {
         searchParams.append("status", "published");
 
         const reviewsUrl = `/api/reviews/hostaway?${searchParams.toString()}`;
-        console.log("Fetching reviews from:", reviewsUrl);
 
         const response = await fetch(reviewsUrl);
 
@@ -221,13 +212,11 @@ export function useListingByName(listingName?: string) {
         }
 
         const data: ReviewsResponse = await response.json();
-        console.log("Reviews response:", data);
 
         if (data.status !== "success") {
           throw new Error(data.message || "Failed to fetch listing");
         }
 
-        console.log("Reviews found:", data.data?.length || 0);
         return data.data;
       } catch (error) {
         console.error("Error in useListingByName:", error);

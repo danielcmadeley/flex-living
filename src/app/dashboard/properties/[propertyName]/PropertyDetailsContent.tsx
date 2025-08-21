@@ -212,7 +212,7 @@ export function PropertyDetailsContent({
     reviewId: number,
     newStatus: "published" | "pending" | "draft",
   ) => {
-    console.log(`Status changed for review ${reviewId} to ${newStatus}`);
+    // Status change handled by ReviewStatusSelect component
   };
 
   const exportPropertyReviews = () => {
