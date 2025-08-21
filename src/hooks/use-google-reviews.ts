@@ -65,22 +65,37 @@ export function useGoogleReviews(options: UseGoogleReviewsOptions = {}) {
       const response = await fetch(url);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch Google reviews");
+        if (response.status === 429) {
+          throw new Error(
+            "Google API rate limit exceeded. Please try again later.",
+          );
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            `HTTP ${response.status}: Failed to fetch Google reviews`,
+        );
       }
 
       return response.json();
     },
     enabled,
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    staleTime: 1000 * 60 * 60 * 6, // 6 hours (longer to reduce API calls)
+    gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days (keep cache longer)
     retry: (failureCount, error) => {
-      // Don't retry on client errors (4xx)
-      if (error instanceof Error && error.message.includes("API key")) {
-        return false;
+      // Don't retry on rate limits (429) or client errors (4xx)
+      if (error instanceof Error) {
+        if (
+          error.message.includes("API key") ||
+          error.message.includes("429") ||
+          error.message.includes("Too Many Requests")
+        ) {
+          return false;
+        }
       }
-      return failureCount < 2;
+      return failureCount < 1; // Reduce retries to prevent hitting rate limits
     },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 

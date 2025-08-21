@@ -1,37 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
-import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
-import { Header } from "@/components/Header";
-import {
-  Pagination,
-  PaginationInfo,
-  usePagination,
-} from "@/components/ui/pagination";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import {
-  ReviewCardSkeleton,
-  PropertyHeaderSkeleton,
-  StatCardSkeleton,
-} from "@/components/ui/skeleton";
 import {
   CombinedListingFilters,
   useCombinedListingFilters,
   type CombinedFilterOptions,
 } from "@/components/CombinedListingFilters";
+import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
+import { Header } from "@/components/Header";
+import { PropertyMap } from "@/components/ui/google-map";
+import {
+  Pagination,
+  PaginationInfo,
+  usePagination,
+} from "@/components/ui/pagination";
 import {
   ReviewSourceBadge,
   ReviewSourceSummary,
 } from "@/components/ui/review-source-badge";
-import { slugToListingName } from "@/lib/utils/slugs";
+import {
+  PropertyHeaderSkeleton,
+  ReviewCardSkeleton,
+  StatCardSkeleton,
+} from "@/components/ui/skeleton";
 import { useCombinedListingReviews } from "@/hooks/use-combined-listing-reviews";
-import { PropertyMap } from "@/components/ui/google-map";
-import { getPropertyLocation } from "@/lib/utils/locations";
 import { getAllPropertyImages } from "@/lib/utils/images";
+import { getPropertyLocation } from "@/lib/utils/locations";
+import { slugToListingName } from "@/lib/utils/slugs";
 
 export default function ListingPage() {
   const params = useParams();
@@ -48,10 +47,10 @@ export default function ListingPage() {
   });
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [showImageModal, setShowImageModal] = useState(false);
+
   const [selectedDates] = useState({
-    checkIn: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-    checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Day after tomorrow
+    checkIn: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
   });
   const [guests, setGuests] = useState(1);
   const [couponCode, setCouponCode] = useState("");
@@ -103,48 +102,6 @@ export default function ListingPage() {
 
   // Get property images
   const propertyImages = getAllPropertyImages(listingName);
-
-  // Keyboard navigation for image gallery
-  useEffect(() => {
-    if (!showImageModal) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowLeft":
-          e.preventDefault();
-          setSelectedImageIndex((prev) => Math.max(0, prev - 1));
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          setSelectedImageIndex((prev) =>
-            Math.min(propertyImages.length - 1, prev + 1),
-          );
-          break;
-        case "Escape":
-          e.preventDefault();
-          setShowImageModal(false);
-          break;
-        case "1":
-        case "2":
-        case "3":
-        case "4":
-        case "5":
-        case "6":
-        case "7":
-        case "8":
-        case "9":
-          e.preventDefault();
-          const index = parseInt(e.key) - 1;
-          if (index < propertyImages.length) {
-            setSelectedImageIndex(index);
-          }
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showImageModal, propertyImages.length]);
 
   const formatDateLong = (date: Date | string) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -210,16 +167,6 @@ export default function ListingPage() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="max-w-7xl mx-auto w-full px-6 flex-1">
-        {/* Breadcrumb Navigation */}
-        <div className="py-6">
-          <Breadcrumb
-            items={[
-              { label: "All Properties", href: "/" },
-              { label: listingName, isActive: true },
-            ]}
-          />
-        </div>
-
         {/* Loading State */}
         {isLoading && reviews.length === 0 && (
           <div className="flex flex-col space-y-6">
@@ -268,17 +215,11 @@ export default function ListingPage() {
                       alt={propertyImages[selectedImageIndex].alt}
                       width={1200}
                       height={600}
-                      className="w-full h-64 md:h-96 lg:h-[500px] object-cover rounded-lg shadow-lg cursor-pointer transition-transform group-hover:scale-[1.01]"
-                      onClick={() => setShowImageModal(true)}
+                      className="w-full h-64 md:h-96 lg:h-[500px] object-cover rounded-lg shadow-lg"
                       priority={selectedImageIndex === 0}
                     />
                     <div className="absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
                       {selectedImageIndex + 1} / {propertyImages.length}
-                    </div>
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <span className="bg-white/90 text-gray-800 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
-                        🔍 Click to enlarge
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -335,7 +276,7 @@ export default function ListingPage() {
                       {propertyImages[selectedImageIndex].alt}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Click image for full size • Use ← → keys
+                      Image {selectedImageIndex + 1} of {propertyImages.length}
                     </div>
                   </div>
                   <button
@@ -400,7 +341,7 @@ export default function ListingPage() {
                   </Link>
                   <Link
                     href="/dashboard"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium"
+                    className="bg-[#284E4C] hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium"
                   >
                     Dashboard
                   </Link>
@@ -1104,7 +1045,7 @@ export default function ListingPage() {
               {/* Right Column - Sticky Booking Widget */}
               <div className="lg:w-96 lg:shrink-0">
                 <div className="sticky top-6 bg-white border rounded-lg p-6 shadow-lg">
-                  <div className="bg-slate-700 text-white px-4 py-3 rounded-lg mb-6">
+                  <div className="bg-[#284E4C] text-white px-4 py-3 rounded-lg mb-6">
                     <h3 className="text-xl font-semibold">Book your stay</h3>
                     <p className="text-slate-200 mt-1">
                       Select dates to see the total price
@@ -1205,7 +1146,7 @@ export default function ListingPage() {
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
-                    <button className="w-full bg-slate-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                    <button className="w-full bg-[#284E4C] text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
                       📅 Book Now
                     </button>
                     <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
@@ -1235,162 +1176,6 @@ export default function ListingPage() {
               <p className="text-sm text-gray-500 text-center">
                 Discover more premium serviced apartments across London
               </p>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Image Modal */}
-        {showImageModal && (
-          <div
-            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowImageModal(false)}
-          >
-            <div
-              className="relative max-w-6xl w-full h-full flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setShowImageModal(false)}
-                className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 p-3 rounded-full backdrop-blur-sm transition-colors z-10"
-                title="Close (Esc)"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-
-              {/* Image Counter */}
-              <div className="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm z-10">
-                <div className="flex items-center gap-2">
-                  <span>
-                    {selectedImageIndex + 1} of {propertyImages.length}
-                  </span>
-                  {selectedImageIndex === 0 && (
-                    <span className="bg-blue-500 px-2 py-1 rounded text-xs">
-                      Main
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Main Modal Image */}
-              <div className="relative max-h-full max-w-full flex items-center justify-center">
-                <Image
-                  src={propertyImages[selectedImageIndex].url}
-                  alt={propertyImages[selectedImageIndex].alt}
-                  width={propertyImages[selectedImageIndex].width || 800}
-                  height={propertyImages[selectedImageIndex].height || 600}
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                />
-              </div>
-
-              {/* Image Caption */}
-              <div className="absolute bottom-4 left-4 bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm max-w-md">
-                <div className="font-medium">
-                  {propertyImages[selectedImageIndex].alt}
-                </div>
-                <div className="text-sm text-gray-300 mt-1">
-                  {listingName} • Photo {selectedImageIndex + 1}
-                </div>
-              </div>
-
-              {/* Navigation Arrows */}
-              <div className="absolute inset-y-0 left-4 flex items-center">
-                <button
-                  onClick={() =>
-                    setSelectedImageIndex(Math.max(0, selectedImageIndex - 1))
-                  }
-                  disabled={selectedImageIndex === 0}
-                  className="bg-black/50 text-white p-4 rounded-full hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm transition-all hover:scale-110"
-                  title="Previous image (←)"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="absolute inset-y-0 right-4 flex items-center">
-                <button
-                  onClick={() =>
-                    setSelectedImageIndex(
-                      Math.min(
-                        propertyImages.length - 1,
-                        selectedImageIndex + 1,
-                      ),
-                    )
-                  }
-                  disabled={selectedImageIndex === propertyImages.length - 1}
-                  className="bg-black/50 text-white p-4 rounded-full hover:bg-black/70 disabled:opacity-30 disabled:cursor-not-allowed backdrop-blur-sm transition-all hover:scale-110"
-                  title="Next image (→)"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Thumbnail Strip */}
-              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 max-w-4xl w-full px-4">
-                <div className="flex gap-2 overflow-x-auto pb-2 justify-center">
-                  {propertyImages.map((image, index) => (
-                    <button
-                      key={image.id}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden transition-all ${
-                        selectedImageIndex === index
-                          ? "ring-2 ring-white ring-offset-2 ring-offset-black/50 opacity-100 scale-110"
-                          : "opacity-60 hover:opacity-80 hover:scale-105"
-                      }`}
-                      title={`Image ${index + 1}: ${image.alt} (Press ${index + 1})`}
-                    >
-                      <Image
-                        src={image.url}
-                        alt={image.alt}
-                        width={64}
-                        height={64}
-                        className="w-full h-full object-cover"
-                      />
-                      {index < 9 && (
-                        <div className="absolute top-0.5 right-0.5 bg-black/70 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                          {index + 1}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         )}

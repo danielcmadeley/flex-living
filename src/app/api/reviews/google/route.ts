@@ -143,6 +143,25 @@ export const GET = withRateLimit(
         language,
       });
 
+      // In development mode, return mock data to prevent rate limits
+      if (process.env.NODE_ENV === "development") {
+        apiLogger.info("Development mode: returning mock Google reviews");
+        return NextResponse.json(
+          {
+            reviews: createMockReviews(),
+            rating: 4.5,
+            totalReviews: 3,
+            source: "mock-dev",
+            message: "Mock data for development",
+          },
+          {
+            headers: {
+              "Cache-Control": "public, max-age=300, s-maxage=300", // 5 minutes cache in dev
+            },
+          },
+        );
+      }
+
       // Check for API key
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
       if (!apiKey) {
@@ -150,10 +169,13 @@ export const GET = withRateLimit(
         return NextResponse.json(
           {
             error: "Google API key not configured",
-            reviews: [],
+            reviews: createMockReviews(),
+            rating: 4.5,
+            totalReviews: 3,
+            source: "mock",
             fallback: true,
           },
-          { status: 500 },
+          { status: 200 },
         );
       }
 
@@ -172,6 +194,27 @@ export const GET = withRateLimit(
           status: response.status,
           statusText: response.statusText,
         });
+
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          return NextResponse.json(
+            {
+              error: "Google API rate limit exceeded. Using cached data.",
+              reviews: createMockReviews(),
+              rating: 4.5,
+              totalReviews: 3,
+              source: "mock",
+              rateLimited: true,
+            },
+            {
+              status: 429,
+              headers: {
+                "Cache-Control": "public, max-age=3600, s-maxage=3600",
+                "Retry-After": "3600",
+              },
+            },
+          );
+        }
 
         // Return mock data on API failure
         return NextResponse.json({
@@ -210,23 +253,38 @@ export const GET = withRateLimit(
         rating: data.result?.rating,
       });
 
-      return NextResponse.json({
-        reviews: transformedReviews,
-        rating: data.result?.rating || 0,
-        totalReviews: data.result?.user_ratings_total || 0,
-        source: "google",
-      });
+      return NextResponse.json(
+        {
+          reviews: transformedReviews,
+          rating: data.result?.rating || 0,
+          totalReviews: data.result?.user_ratings_total || 0,
+          source: "google",
+        },
+        {
+          headers: {
+            "Cache-Control": "public, max-age=21600, s-maxage=21600", // 6 hours cache
+          },
+        },
+      );
     } catch (error) {
       apiLogger.error("Failed to fetch Google reviews", error);
 
-      // Return a graceful fallback response
-      return NextResponse.json({
-        reviews: [],
-        rating: 0,
-        totalReviews: 0,
-        source: "error",
-        error: ERROR_MESSAGES.SERVER_ERROR,
-      });
+      // Return a graceful fallback response with mock data
+      return NextResponse.json(
+        {
+          reviews: createMockReviews(),
+          rating: 4.5,
+          totalReviews: 3,
+          source: "fallback",
+          error: "Using sample data due to API error",
+        },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "public, max-age=1800, s-maxage=1800", // 30 minutes cache for errors
+          },
+        },
+      );
     }
   },
   { type: "external" },
