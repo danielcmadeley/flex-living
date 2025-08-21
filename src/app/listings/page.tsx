@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import { Header } from "@/components/Header";
@@ -11,6 +12,7 @@ import { Pagination, usePagination } from "@/components/ui/pagination";
 import { createListingSlug } from "@/lib/utils/slugs";
 import { MultiPropertyMap } from "@/components/ui/google-map";
 import { getAllPropertyLocations } from "@/lib/utils/locations";
+import { getMainPropertyImage, imageToProps } from "@/lib/utils/images";
 import {
   formatDate,
   renderStars,
@@ -273,63 +275,98 @@ export default function ListingsPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {paginatedListings.map((listing) => (
-                    <div key={listing.name} className="group">
-                      <Link
-                        href={`/listings/${createListingSlug(listing.name)}`}
-                        className="block"
-                        onClick={() => setSelectedProperty(listing.name)}
-                      >
-                        <div
-                          className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${
-                            selectedProperty === listing.name
-                              ? "ring-2 ring-blue-500 border-blue-300 bg-blue-50"
-                              : ""
-                          }`}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {paginatedListings.map((listing) => {
+                    const mainImage = getMainPropertyImage(listing.name);
+                    const imageProps = imageToProps(mainImage, {
+                      className: "w-full h-48 object-cover rounded-t-lg",
+                      loading: "lazy",
+                    });
+
+                    return (
+                      <div key={listing.name} className="group">
+                        <Link
+                          href={`/listings/${createListingSlug(listing.name)}`}
+                          className="block"
+                          onClick={() => setSelectedProperty(listing.name)}
                         >
-                          <div className="mb-3">
-                            <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors mb-2">
-                              {listing.name}
-                            </h3>
-                            <div className="flex items-center gap-3 mb-2">
-                              {listing.averageRating > 0 && (
-                                <div className="flex items-center">
-                                  <div className="flex items-center mr-1">
-                                    {renderStars(listing.averageRating)}
-                                  </div>
-                                  <span className="text-sm font-medium">
-                                    {formatRating(listing.averageRating)}/
-                                    {RATINGS.MAX_RATING}
+                          <div
+                            className={`bg-white border rounded-lg shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden ${
+                              selectedProperty === listing.name
+                                ? "ring-2 ring-blue-500 border-blue-300"
+                                : ""
+                            }`}
+                          >
+                            {/* Property Image */}
+                            <div className="relative">
+                              <Image
+                                src={imageProps.src}
+                                alt={imageProps.alt}
+                                width={imageProps.width}
+                                height={imageProps.height}
+                                className={imageProps.className}
+                                loading={imageProps.loading}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop&crop=center&auto=format&q=75`;
+                                }}
+                              />
+                              <div className="absolute top-3 right-3">
+                                <span className="px-2 py-1 bg-white/90 text-gray-800 text-xs font-medium rounded-full backdrop-blur-sm">
+                                  Premium
+                                </span>
+                              </div>
+                              {selectedProperty === listing.name && (
+                                <div className="absolute inset-0 bg-blue-500/10"></div>
+                              )}
+                            </div>
+
+                            {/* Property Details */}
+                            <div className="p-4">
+                              <div className="mb-3">
+                                <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors mb-2">
+                                  {listing.name}
+                                </h3>
+                                <div className="flex items-center gap-3 mb-2">
+                                  {listing.averageRating > 0 && (
+                                    <div className="flex items-center">
+                                      <div className="flex items-center mr-1">
+                                        {renderStars(listing.averageRating)}
+                                      </div>
+                                      <span className="text-sm font-medium">
+                                        {formatRating(listing.averageRating)}/
+                                        {RATINGS.MAX_RATING}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <span className="text-sm text-gray-500">
+                                    {formatCount(listing.reviewCount, "review")}
                                   </span>
                                 </div>
-                              )}
-                              <span className="text-sm text-gray-500">
-                                {formatCount(listing.reviewCount, "review")}
-                              </span>
-                            </div>
-                            <p className="text-gray-600 text-sm line-clamp-2 mb-2">
-                              &ldquo;
-                              {truncateText(
-                                listing.sampleReview,
-                                TEXT_LIMITS.REVIEW_PREVIEW,
-                              )}
-                              &rdquo;
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center text-sm text-gray-500">
-                              <span className="mr-1">📍</span>
-                              <span>London Property</span>
-                            </div>
-                            <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">
-                              View Reviews →
+                                <p className="text-gray-600 text-sm line-clamp-2 mb-2">
+                                  &ldquo;
+                                  {truncateText(
+                                    listing.sampleReview,
+                                    TEXT_LIMITS.REVIEW_PREVIEW,
+                                  )}
+                                  &rdquo;
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center text-sm text-gray-500">
+                                  <span className="mr-1">📍</span>
+                                  <span>London Property</span>
+                                </div>
+                                <div className="text-blue-600 text-sm font-medium group-hover:text-blue-700">
+                                  View Reviews →
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Link>
-                    </div>
-                  ))}
+                        </Link>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}
