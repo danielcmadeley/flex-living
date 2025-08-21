@@ -2,6 +2,7 @@
 
 import { ErrorBoundary, ErrorFallback } from "@/components/ErrorBoundary";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { ListingsPageLoadingState } from "@/components/loading-states";
 import { MultiPropertyMap } from "@/components/ui/google-map";
 import { Pagination, usePagination } from "@/components/ui/pagination";
@@ -20,6 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Types for map synchronization
 interface MapBounds {
@@ -382,6 +389,139 @@ export default function ListingsPage() {
           />
         </div>
       </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        {/* Main Content */}
+        <div className="mb-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">
+            Discover furnished monthly apartments for rent in London
+          </h1>
+
+          <div className="space-y-6 text-gray-700 leading-relaxed">
+            <p>
+              London's moods shift by neighbourhood—Regency terraces in Primrose
+              Hill, riverside warehouses in Wapping, jazz-filled cellars in Soho
+              - so choosing the right furnished apartment for rent in London
+              shapes your whole experience. The Flex makes that choice simple
+              with a hand-picked range that spans bright studios near Liverpool
+              Street for consultants on tight timelines, calm one-beds in
+              Battersea for remote workers, and larger homes in leafy Highgate
+              for families settling in for a season. Whether your agenda calls
+              for a short term flat rental in London, a flexible monthly rental
+              in London or a longer serviced stay, you'll find a space that
+              feels like home from the moment the key turns.
+            </p>
+
+            <p>
+              Every reservation bundles the essentials - utilities,
+              lightning-speed Wi-Fi, a fully stocked kitchen, premium linens and
+              on-call local support - so evenings are for Tate Lates, Borough
+              Market picnics or riverside runs, not utility set-up. Plans
+              evolving? Your stay can glide into a longer short-term lease in
+              London without the chaos of moving or broker fees, letting you
+              extend that Thames-side chapter as long as opportunity knocks.
+              With The Flex behind the door - no matter the postcode - you're
+              free to script a London life that changes as quickly as the city
+              itself.
+            </p>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">FAQs</h2>
+
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem
+              value="item-1"
+              className="border border-gray-200 rounded-lg px-6"
+            >
+              <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
+                Does The Flex offer both short term and long term rentals in
+                London?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 pb-6">
+                Yes, The Flex offers flexible rental options ranging from
+                short-term stays of a few weeks to long-term arrangements
+                spanning several months or more. Our accommodations are designed
+                to adapt to your timeline, whether you need a brief corporate
+                stay or a more extended living arrangement while you settle in
+                London.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              value="item-2"
+              className="border border-gray-200 rounded-lg px-6"
+            >
+              <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
+                Can I book a corporate apartment in London?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 pb-6">
+                Absolutely. The Flex specializes in corporate housing solutions
+                for businesses of all sizes. We offer fully furnished apartments
+                with business-grade Wi-Fi, flexible lease terms, and dedicated
+                account management to handle multiple bookings, making it simple
+                for companies to accommodate traveling employees, consultants,
+                or teams on temporary assignments.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              value="item-3"
+              className="border border-gray-200 rounded-lg px-6"
+            >
+              <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
+                What is included in The Flex's serviced apartments in London?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 pb-6">
+                Every Flex apartment comes fully equipped with utilities,
+                high-speed Wi-Fi, a complete kitchen with appliances and
+                cookware, premium linens and towels, weekly housekeeping, and
+                24/7 local support. You'll also have access to laundry
+                facilities, and many properties include additional amenities
+                like gyms, concierge services, and communal spaces.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              value="item-4"
+              className="border border-gray-200 rounded-lg px-6"
+            >
+              <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
+                Can a foreigner rent an apartment in London?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 pb-6">
+                Yes, The Flex welcomes international guests and makes the rental
+                process straightforward for foreigners. We handle all the
+                necessary documentation and can assist with references and
+                deposits. Our team understands the unique challenges
+                international residents face and provides support throughout
+                your stay, from arrival to departure.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              value="item-5"
+              className="border border-gray-200 rounded-lg px-6"
+            >
+              <AccordionTrigger className="text-left text-lg font-semibold text-gray-900 hover:no-underline py-6">
+                How much is monthly rent in London?
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-700 pb-6">
+                Monthly rent varies significantly based on location, size, and
+                amenities. Our studio apartments typically start from £2,500 per
+                month, one-bedroom apartments from £3,500, and larger properties
+                from £5,000 and up. Prices include all utilities, services, and
+                amenities, offering excellent value compared to traditional
+                rentals when you factor in the convenience and included
+                services.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </div>
+      <Footer />
     </>
   );
 

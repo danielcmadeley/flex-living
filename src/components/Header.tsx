@@ -8,7 +8,7 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="bg-[#FFFDF6] sticky top-0 z-[99999]">
+    <header className="bg-[#FFFDF6] sticky top-0 z-[99999] py-3">
       <div className="max-w-[90rem] mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
@@ -23,41 +23,32 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                pathname === "/" ? "text-blue-600" : "text-gray-700"
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              href="/listings"
-              className={`text-sm font-medium transition-colors hover:text-[#284E4C] ${
-                pathname?.startsWith("/listings")
-                  ? "text-[#284E4C]"
-                  : "text-gray-700"
-              }`}
-            >
-              Properties
-            </Link>
-          </nav>
-
-          {/* CTA Button */}
           <div className="flex items-center space-x-4">
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link
+                href="/"
+                className={`text-sm font-medium transition-colors hover:text-[#284E4C] ${
+                  pathname === "/" ? "text-[#284E4C]" : "text-gray-700"
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                href="/listings"
+                className={`text-sm font-medium transition-colors hover:text-[#284E4C] ${
+                  pathname?.startsWith("/listings")
+                    ? "text-[#284E4C]"
+                    : "text-gray-700"
+                }`}
+              >
+                Properties
+              </Link>
+            </nav>
             <Link
               href="/dashboard"
-              className="hidden sm:inline-flex text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+              className="hidden bg-[#284E4C] sm:inline-flex text-sm font-medium text-neutral-100 px-4 py-2 rounded-md hover:text-blue-600 transition-colors"
             >
               Manager Login
-            </Link>
-            <Link
-              href="/listings"
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              View Properties
             </Link>
           </div>
 
