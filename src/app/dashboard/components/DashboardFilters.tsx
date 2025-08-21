@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,9 +22,13 @@ import {
 
 interface DashboardFiltersProps {
   properties: string[];
+  isFetching?: boolean;
 }
 
-export function DashboardFilters({ properties }: DashboardFiltersProps) {
+export function DashboardFilters({
+  properties,
+  isFetching = false,
+}: DashboardFiltersProps) {
   const filters = useFilters();
   const {
     setSearchTerm,
@@ -35,6 +40,23 @@ export function DashboardFilters({ properties }: DashboardFiltersProps) {
     setFilters,
   } = useFilterActions();
   const { hasActiveFilters } = useComputedValues();
+
+  // Local state for search input to enable debouncing
+  const [searchInput, setSearchInput] = useState(filters.searchTerm || "");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput || undefined);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput, setSearchTerm]);
+
+  // Update local search input when filter changes externally
+  useEffect(() => {
+    setSearchInput(filters.searchTerm || "");
+  }, [filters.searchTerm]);
 
   const clearFilters = () => {
     resetFilters();
@@ -48,6 +70,9 @@ export function DashboardFilters({ properties }: DashboardFiltersProps) {
             <Filter className="h-5 w-5 text-blue-600" />
           </div>
           Filters & Search
+          {isFetching && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 ml-2"></div>
+          )}
         </CardTitle>
         {hasActiveFilters() && (
           <Button
@@ -67,8 +92,8 @@ export function DashboardFilters({ properties }: DashboardFiltersProps) {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search reviews by guest, property, or content..."
-            value={filters.searchTerm || ""}
-            onChange={(e) => setSearchTerm(e.target.value || "")}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
           />
         </div>
@@ -258,7 +283,10 @@ export function DashboardFilters({ properties }: DashboardFiltersProps) {
                 Search: &ldquo;{filters.searchTerm}&rdquo;
                 <X
                   className="h-3 w-3 cursor-pointer hover:text-orange-900 transition-colors"
-                  onClick={() => setSearchTerm(undefined)}
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearchTerm(undefined);
+                  }}
                 />
               </Badge>
             )}

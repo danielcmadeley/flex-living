@@ -1,14 +1,22 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 
 import { useReviews } from "@/hooks/use-reviews";
 import { DashboardFilters } from "../components/DashboardFilters";
 import { ReviewsTable } from "../components/ReviewsTable";
 import { ReviewsGridView } from "../components/ReviewsGridView";
 import { Button } from "@/components/ui/button";
+import { Pagination, PaginationInfo } from "@/components/ui/pagination";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { Grid, List } from "lucide-react";
-import { useFilters, useUIState, useUIActions } from "@/stores/dashboard-store";
+import {
+  useFilters,
+  useUIState,
+  useUIActions,
+  usePagination,
+  usePaginationActions,
+} from "@/stores/dashboard-store";
 import { SUCCESS_MESSAGES } from "@/lib/constants";
 import { logger } from "@/lib/utils/logger";
 
@@ -16,13 +24,22 @@ export function ReviewsPage() {
   // Zustand store hooks
   const filters = useFilters();
   const uiState = useUIState();
+  const pagination = usePagination();
   const { setViewMode, showToast } = useUIActions();
+  const { setCurrentPage, updatePagination } = usePaginationActions();
 
-  // Fetch reviews with current filters
-  const { reviews, statistics, isLoading } = useReviews({
+  // Fetch reviews with current filters and pagination
+  const { reviews, statistics, total, isLoading, isFetching } = useReviews({
     ...filters,
     includeStats: true,
   });
+
+  // Update pagination when total changes
+  useEffect(() => {
+    if (typeof total === "number") {
+      updatePagination(total);
+    }
+  }, [total, updatePagination]);
 
   // Get unique properties for filter dropdown
   const properties = useMemo(() => {
@@ -32,18 +49,8 @@ export function ReviewsPage() {
     return Array.from(uniqueProperties).sort();
   }, [reviews]);
 
-  // Filter reviews based on search term (client-side filtering for instant feedback)
-  const filteredReviews = useMemo(() => {
-    if (!filters.searchTerm) return reviews;
-
-    const searchLower = filters.searchTerm.toLowerCase();
-    return reviews.filter(
-      (review) =>
-        review.guestName.toLowerCase().includes(searchLower) ||
-        review.comment.toLowerCase().includes(searchLower) ||
-        review.listingName.toLowerCase().includes(searchLower),
-    );
-  }, [reviews, filters.searchTerm]);
+  // Use reviews directly since filtering is now handled server-side
+  const displayReviews = reviews;
 
   const handleStatusChange = (
     reviewId: number,
@@ -54,7 +61,8 @@ export function ReviewsPage() {
     showToast(SUCCESS_MESSAGES.STATUS_UPDATED, "success");
   };
 
-  if (isLoading) {
+  // Show full loading spinner only on initial load (no previous data)
+  if (isLoading && !reviews.length) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -75,7 +83,7 @@ export function ReviewsPage() {
     );
   }
 
-  if (!isLoading && reviews.length === 0) {
+  if (!isLoading && !isFetching && reviews.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -133,9 +141,9 @@ export function ReviewsPage() {
         </div>
       </div>
 
-      <DashboardFilters properties={properties} />
+      <DashboardFilters properties={properties} isFetching={isFetching} />
 
-      {filteredReviews.length === 0 ? (
+      {displayReviews.length === 0 ? (
         <div className="flex items-center justify-center min-h-[300px]">
           <div className="text-center">
             <p className="text-lg font-medium text-gray-900">
@@ -148,14 +156,35 @@ export function ReviewsPage() {
         </div>
       ) : (
         <>
-          {uiState.viewMode === "table" ? (
-            <ReviewsTable
-              reviews={filteredReviews}
-              onStatusChange={handleStatusChange}
-              isLoading={isLoading}
-            />
-          ) : (
-            <ReviewsGridView reviews={filteredReviews} isLoading={isLoading} />
+          <LoadingOverlay isLoading={isFetching && reviews.length > 0}>
+            {uiState.viewMode === "table" ? (
+              <ReviewsTable
+                reviews={displayReviews}
+                onStatusChange={handleStatusChange}
+                isLoading={false}
+              />
+            ) : (
+              <ReviewsGridView reviews={displayReviews} isLoading={false} />
+            )}
+          </LoadingOverlay>
+
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="bg-white/80 rounded-lg border border-gray-200/50 p-4 backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <PaginationInfo
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  itemsPerPage={pagination.pageSize}
+                />
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            </div>
           )}
 
           <div className="bg-white/80 rounded-lg border border-gray-200/50 p-6 backdrop-blur-sm">
@@ -163,7 +192,9 @@ export function ReviewsPage() {
               <div>
                 <h3 className="font-semibold text-gray-900">Review Summary</h3>
                 <p className="text-sm text-gray-600">
-                  Showing {filteredReviews.length} of {reviews.length} reviews
+                  Showing {displayReviews.length} reviews on this page
+                  {pagination.totalItems > 0 &&
+                    ` of ${pagination.totalItems} total`}
                   {properties.length > 0 &&
                     ` across ${properties.length} properties`}
                 </p>
@@ -178,7 +209,7 @@ export function ReviewsPage() {
                 <div>
                   Total Reviews:{" "}
                   <span className="font-medium">
-                    {statistics?.totalReviews || 0}
+                    {pagination.totalItems || 0}
                   </span>
                 </div>
               </div>

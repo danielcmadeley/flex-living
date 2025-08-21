@@ -1,14 +1,16 @@
 import { db, reviews, type Review, type NewReview } from "./index";
-import { eq, desc, and, ilike, count, avg } from "drizzle-orm";
+import { eq, desc, and, or, ilike, count, avg } from "drizzle-orm";
 import { mockReviews } from "@/data/mockReviews";
 
 export class ReviewsQueries {
-  // Get all reviews with optional filters
+  // Get all reviews with optional filters and pagination
   static async getAll(filters?: {
     type?: string;
     status?: string;
     listingName?: string;
+    searchTerm?: string;
     limit?: number;
+    offset?: number;
   }): Promise<Review[]> {
     try {
       // Build query conditions
@@ -23,6 +25,16 @@ export class ReviewsQueries {
       if (filters?.listingName) {
         conditions.push(ilike(reviews.listingName, `%${filters.listingName}%`));
       }
+      if (filters?.searchTerm) {
+        const searchTerm = `%${filters.searchTerm}%`;
+        conditions.push(
+          or(
+            ilike(reviews.guestName, searchTerm),
+            ilike(reviews.publicReview, searchTerm),
+            ilike(reviews.listingName, searchTerm),
+          ),
+        );
+      }
 
       // Build base query
       const baseQuery = db.select().from(reviews);
@@ -31,17 +43,22 @@ export class ReviewsQueries {
       const queryWithConditions =
         conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
-      // Apply ordering
-      const queryWithOrder = queryWithConditions.orderBy(
-        desc(reviews.submittedAt),
-      );
+      // Build final query with ordering and pagination
+      let query = queryWithConditions.orderBy(desc(reviews.submittedAt));
 
-      // Apply limit if specified
-      const finalQuery = filters?.limit
-        ? queryWithOrder.limit(filters.limit)
-        : queryWithOrder;
+      // Apply pagination using type assertion to work around Drizzle TypeScript issues
+      if (filters?.limit !== undefined) {
+        if (filters?.offset !== undefined) {
+          query = (query as any).limit(filters.limit).offset(filters.offset);
+        } else {
+          query = (query as any).limit(filters.limit);
+        }
+      } else if (filters?.offset !== undefined) {
+        // If only offset is provided, we need to add a reasonable limit to avoid issues
+        query = (query as any).limit(1000).offset(filters.offset);
+      }
 
-      return await finalQuery;
+      return await query;
     } catch (error) {
       console.error("Error fetching reviews:", error);
       return [];
@@ -246,14 +263,83 @@ export class ReviewsQueries {
     }
   }
 
-  // Count total reviews
-  static async count(): Promise<number> {
+  // Count total reviews with optional filters
+  static async count(filters?: {
+    type?: string;
+    status?: string;
+    listingName?: string;
+    searchTerm?: string;
+  }): Promise<number> {
     try {
-      const result = await db.select({ count: count() }).from(reviews);
+      // Build query conditions (same as getAll)
+      const conditions = [];
+
+      if (filters?.type) {
+        conditions.push(eq(reviews.type, filters.type));
+      }
+      if (filters?.status) {
+        conditions.push(eq(reviews.status, filters.status));
+      }
+      if (filters?.listingName) {
+        conditions.push(ilike(reviews.listingName, `%${filters.listingName}%`));
+      }
+      if (filters?.searchTerm) {
+        const searchTerm = `%${filters.searchTerm}%`;
+        conditions.push(
+          or(
+            ilike(reviews.guestName, searchTerm),
+            ilike(reviews.publicReview, searchTerm),
+            ilike(reviews.listingName, searchTerm),
+          ),
+        );
+      }
+
+      // Build count query
+      const baseQuery = db.select({ count: count() }).from(reviews);
+
+      // Apply conditions if any
+      const finalQuery =
+        conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
+
+      const result = await finalQuery;
       return Number(result[0]?.count) || 0;
     } catch (error) {
       console.error("Error counting reviews:", error);
       return 0;
+    }
+  }
+
+  // Get paginated reviews with total count
+  static async getPaginated(filters?: {
+    type?: string;
+    status?: string;
+    listingName?: string;
+    searchTerm?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ reviews: Review[]; total: number }> {
+    try {
+      // Get total count with same filters (excluding pagination)
+      const total = await this.count({
+        type: filters?.type,
+        status: filters?.status,
+        listingName: filters?.listingName,
+        searchTerm: filters?.searchTerm,
+      });
+
+      // Get paginated reviews
+      const reviewsData = await this.getAll(filters);
+
+      return {
+        reviews: reviewsData,
+        total,
+      };
+    } catch (error) {
+      console.error("Error fetching paginated reviews:", error);
+      return {
+        reviews: [],
+        total: 0,
+      };
     }
   }
 

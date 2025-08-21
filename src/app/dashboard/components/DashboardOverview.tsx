@@ -13,9 +13,10 @@ import {
 import { useReviewsWithStats } from "@/hooks/use-reviews";
 
 export function DashboardOverview() {
-  const { reviews, statistics, isLoading, isError } = useReviewsWithStats();
+  const { reviews, statistics, isLoading, isFetching, isError } =
+    useReviewsWithStats();
 
-  if (isLoading) {
+  if (isLoading && !reviews.length) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (

@@ -45,18 +45,22 @@ export const GET = withRateLimit(
         type,
         status,
         listingName,
+        searchTerm,
         limit,
+        offset,
         sortOrder,
         includeStats,
         groupBy,
       } = validation.data;
 
-      // Fetch reviews from database
-      const dbReviews = await ReviewsQueries.getAll({
+      // Fetch reviews from database with pagination
+      const { reviews: dbReviews, total } = await ReviewsQueries.getPaginated({
         type: type || undefined,
         status: status || undefined,
         listingName: listingName || undefined,
+        searchTerm: searchTerm || undefined,
         limit: limit || undefined,
+        offset: offset || undefined,
       });
 
       // Convert database reviews to normalized format
@@ -117,7 +121,7 @@ export const GET = withRateLimit(
       const response = {
         status: "success" as const,
         data: responseData as NormalizedReview[],
-        total: normalizedReviews.length,
+        total: total, // Use total from database, not just current page count
         ...additionalInfo,
       };
 

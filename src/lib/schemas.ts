@@ -63,7 +63,22 @@ export const reviewQuerySchema = z.object({
       if (!val || val === "null" || val === "undefined") return undefined;
       return val;
     }),
+  searchTerm: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      return val;
+    }),
   limit: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === "null" || val === "undefined") return undefined;
+      const parsed = parseInt(val);
+      return isNaN(parsed) ? undefined : parsed;
+    }),
+  offset: z
     .string()
     .optional()
     .transform((val) => {

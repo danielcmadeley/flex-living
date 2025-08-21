@@ -25,6 +25,14 @@ export interface FilterState {
   includeStats?: boolean;
   groupBy?: "listing" | "type";
   limit?: number;
+  offset?: number;
+}
+
+export interface PaginationState {
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
 }
 
 export interface BulkActionState {
@@ -52,6 +60,7 @@ export interface DashboardState {
   filters: FilterState;
   bulkActions: BulkActionState;
   ui: UIState;
+  pagination: PaginationState;
 
   // Filter Actions
   setFilters: (filters: Partial<FilterState>) => void;
@@ -62,6 +71,12 @@ export interface DashboardState {
   setRatingRange: (min?: number, max?: number) => void;
   setSortOrder: (order: "asc" | "desc") => void;
   setDateRange: (from?: Date, to?: Date) => void;
+
+  // Pagination Actions
+  setCurrentPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  updatePagination: (totalItems: number) => void;
+  resetPagination: () => void;
 
   // Bulk Action Methods
   toggleReviewSelection: (reviewId: number) => void;
@@ -90,12 +105,21 @@ export interface DashboardState {
 const defaultFilters: FilterState = {
   sortOrder: "desc",
   includeStats: true,
+  limit: 50,
+  offset: 0,
 };
 
 const defaultBulkActions: BulkActionState = {
   selectedReviews: new Set(),
   isSelectAllMode: false,
   isPerformingBulkAction: false,
+};
+
+const defaultPagination: PaginationState = {
+  currentPage: 1,
+  pageSize: 50,
+  totalPages: 1,
+  totalItems: 0,
 };
 
 const defaultUI: UIState = {
@@ -115,38 +139,55 @@ export const useDashboardStore = create<DashboardState>()(
         filters: defaultFilters,
         bulkActions: defaultBulkActions,
         ui: defaultUI,
+        pagination: defaultPagination,
 
         // Filter actions
         setFilters: (newFilters) =>
           set((state: Draft<DashboardState>) => {
             state.filters = { ...state.filters, ...newFilters };
+            // Reset pagination when filters change
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
           }),
 
         resetFilters: () =>
           set((state: Draft<DashboardState>) => {
             state.filters = defaultFilters;
             state.bulkActions.selectedReviews = new Set();
+            state.pagination = defaultPagination;
           }),
 
         setSearchTerm: (term) =>
           set((state: Draft<DashboardState>) => {
             state.filters.searchTerm = term;
+            // Reset pagination when search changes
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
           }),
 
         setStatus: (status) =>
           set((state: Draft<DashboardState>) => {
             state.filters.status = status;
+            // Reset pagination when status filter changes
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
           }),
 
         setListingName: (name) =>
           set((state: Draft<DashboardState>) => {
             state.filters.listingName = name;
+            // Reset pagination when listing filter changes
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
           }),
 
         setRatingRange: (min, max) =>
           set((state: Draft<DashboardState>) => {
             state.filters.minRating = min;
             state.filters.maxRating = max;
+            // Reset pagination when rating filter changes
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
           }),
 
         setSortOrder: (order) =>
@@ -157,6 +198,53 @@ export const useDashboardStore = create<DashboardState>()(
         setDateRange: (from, to) =>
           set((state: Draft<DashboardState>) => {
             state.filters.dateRange = from || to ? { from, to } : undefined;
+            // Reset pagination when date range changes
+            state.pagination.currentPage = 1;
+            state.filters.offset = 0;
+          }),
+
+        // Pagination actions
+        setCurrentPage: (page) =>
+          set((state: Draft<DashboardState>) => {
+            state.pagination.currentPage = page;
+            const offset = (page - 1) * state.pagination.pageSize;
+            state.filters.offset = offset;
+          }),
+
+        setPageSize: (size) =>
+          set((state: Draft<DashboardState>) => {
+            state.pagination.pageSize = size;
+            state.pagination.currentPage = 1;
+            state.filters.limit = size;
+            state.filters.offset = 0;
+            // Recalculate total pages
+            state.pagination.totalPages = Math.ceil(
+              state.pagination.totalItems / size,
+            );
+          }),
+
+        updatePagination: (totalItems) =>
+          set((state: Draft<DashboardState>) => {
+            state.pagination.totalItems = totalItems;
+            state.pagination.totalPages = Math.ceil(
+              totalItems / state.pagination.pageSize,
+            );
+            // Ensure current page is valid
+            if (state.pagination.currentPage > state.pagination.totalPages) {
+              state.pagination.currentPage = Math.max(
+                1,
+                state.pagination.totalPages,
+              );
+              const offset =
+                (state.pagination.currentPage - 1) * state.pagination.pageSize;
+              state.filters.offset = offset;
+            }
+          }),
+
+        resetPagination: () =>
+          set((state: Draft<DashboardState>) => {
+            state.pagination = defaultPagination;
+            state.filters.offset = 0;
           }),
 
         // Bulk action methods
@@ -245,6 +333,7 @@ export const useDashboardStore = create<DashboardState>()(
             state.filters = defaultFilters;
             state.bulkActions = defaultBulkActions;
             state.ui = defaultUI;
+            state.pagination = defaultPagination;
           }),
 
         // Computed values
@@ -273,6 +362,7 @@ export const useDashboardStore = create<DashboardState>()(
         name: "flex-living-dashboard",
         partialize: (state) => ({
           filters: state.filters,
+          pagination: state.pagination,
           ui: {
             viewMode: state.ui.viewMode,
             sidebarCollapsed: state.ui.sidebarCollapsed,
@@ -289,6 +379,8 @@ export const useDashboardStore = create<DashboardState>()(
 
 // Selector hooks for better performance
 export const useFilters = () => useDashboardStore((state) => state.filters);
+export const usePagination = () =>
+  useDashboardStore((state) => state.pagination);
 
 // Individual action hooks to avoid object recreation
 export const useFilterActions = () => {
@@ -322,6 +414,23 @@ export const useFilterActions = () => {
       setSortOrder,
       setDateRange,
     ],
+  );
+};
+
+export const usePaginationActions = () => {
+  const setCurrentPage = useDashboardStore((state) => state.setCurrentPage);
+  const setPageSize = useDashboardStore((state) => state.setPageSize);
+  const updatePagination = useDashboardStore((state) => state.updatePagination);
+  const resetPagination = useDashboardStore((state) => state.resetPagination);
+
+  return useMemo(
+    () => ({
+      setCurrentPage,
+      setPageSize,
+      updatePagination,
+      resetPagination,
+    }),
+    [setCurrentPage, setPageSize, updatePagination, resetPagination],
   );
 };
 
