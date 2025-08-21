@@ -53,8 +53,13 @@ export default function ListingsPage() {
   const [visibleProperties, setVisibleProperties] = useState<string[]>([]);
   const mapInstanceRef = useRef<unknown>(null);
 
-  // Get all property locations
+  // Get all property locations (map always shows all locations)
   const allPropertyLocations = getAllPropertyLocations();
+
+  // Filter to only show locations that have database listings
+  const databasePropertyLocations = allPropertyLocations.filter((location) =>
+    listings.some((listing) => listing.name === location.name),
+  );
 
   // Filter listings to only show those visible on the map
   const filteredListings = listings.filter(
@@ -90,7 +95,7 @@ export default function ListingsPage() {
   // Update visible properties when map bounds change
   useEffect(() => {
     if (mapBounds) {
-      const visible = allPropertyLocations
+      const visible = databasePropertyLocations
         .filter((location) => isPropertyInBounds(location, mapBounds))
         .map((location) => location.name);
       setVisibleProperties((prev) => {
@@ -104,7 +109,7 @@ export default function ListingsPage() {
         return prev;
       });
     }
-  }, [mapBounds, allPropertyLocations, isPropertyInBounds]);
+  }, [mapBounds, databasePropertyLocations, isPropertyInBounds]);
 
   // Handle map bounds change
   const handleMapBoundsChange = useCallback((bounds: MapBounds) => {
@@ -133,10 +138,10 @@ export default function ListingsPage() {
     [router],
   );
 
-  // Memoize property data to prevent unnecessary re-renders
+  // Memoize property data to prevent unnecessary re-renders (only database properties)
   const mapProperties = useMemo(
     () =>
-      allPropertyLocations.map((location) => ({
+      databasePropertyLocations.map((location) => ({
         name: location.name,
         lat: location.lat,
         lng: location.lng,
@@ -147,7 +152,7 @@ export default function ListingsPage() {
           visibleProperties.length === 0 ||
           visibleProperties.includes(location.name),
       })),
-    [allPropertyLocations, selectedProperty, visibleProperties],
+    [databasePropertyLocations, selectedProperty, visibleProperties],
   );
 
   if (isLoading) {

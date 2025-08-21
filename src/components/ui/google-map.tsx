@@ -541,12 +541,7 @@ export function MultiPropertyMap({
         const bounds = new window.google.maps.LatLngBounds();
         const validProperties = properties.filter((p) => p.lat && p.lng);
 
-        if (validProperties.length === 0) {
-          setError("No valid coordinates found for properties");
-          return;
-        }
-
-        // Default center (London)
+        // Default center (London) - always show map even with no properties
         const center = { lat: 51.5074, lng: -0.1278 };
 
         // Add small delay to ensure DOM is fully ready
@@ -632,8 +627,8 @@ export function MultiPropertyMap({
       }
     };
 
-    // Only initialize if we have a DOM element and properties
-    if (mapRef.current && properties.length > 0) {
+    // Initialize if we have a DOM element (regardless of properties count)
+    if (mapRef.current) {
       initializeMap();
     }
   }, [isLoaded]);
@@ -714,7 +709,7 @@ export function MultiPropertyMap({
       // Store info window reference
       infoWindowsRef.current.push(infoWindow);
 
-      // Marker click only shows popup, doesn't navigate
+      // Marker click shows popup
       marker.addListener("click", () => {
         // Close all other info windows
         infoWindowsRef.current.forEach((iw) => {
@@ -722,6 +717,7 @@ export function MultiPropertyMap({
             iw.close();
           }
         });
+
         // Open this info window
         infoWindow.open(localMapRef.current, marker);
       });
